@@ -30,8 +30,8 @@
         <PackageTags>.NET MAUI, navigation, ViewModel, DI, cross-platform, MVVM, mobile development, Shell Navigation, Xamarin.Forms, dependency injection, developer tools</PackageTags>
         <Title>ShellInject</Title>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-        <PackageProjectUrl>https://github.com/JamiSmith/ShellInject</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/JamiSmith/ShellInject</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/scryptfyre/ShellInject</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/scryptfyre/ShellInject</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <EnablePackageValidation>true</EnablePackageValidation>
         <IncludeSymbols>true</IncludeSymbols>
