@@ -33,7 +33,6 @@
         <PackageProjectUrl>https://github.com/JamiSmith/ShellInject</PackageProjectUrl>
         <RepositoryUrl>https://github.com/JamiSmith/ShellInject</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
         <EnablePackageValidation>true</EnablePackageValidation>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
