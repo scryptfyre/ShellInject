@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Sample.ViewModels"
+             x:DataType="vm:MainViewModel"
+             Title="Examples"
+             BackgroundColor="#F7F8FC"
+             x:Class="Sample.ContentPages.MainPage">
+    <ScrollView>
+        <VerticalStackLayout
+            Spacing="16"
+            Padding="20,24,20,32">
+
+            <Border
+                BackgroundColor="#1F2937"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 24"
+                Padding="24">
+                <VerticalStackLayout Spacing="12">
+                    <Label
+                        Text="ShellInject"
+                        TextColor="White"
+                        FontSize="30"
+                        FontAttributes="Bold" />
+                    <Label
+                        Text="A small catalog of navigation, ViewModel injection, lifecycle hooks, and data passing examples."
+                        TextColor="#D1D5DB"
+                        FontSize="15" />
+                    <Label
+                        Text="UseShellInject() wires pages to ViewModels by convention, with ViewModelType available for overrides."
+                        TextColor="#A7F3D0"
+                        FontSize="13" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border
+                BackgroundColor="White"
+                Stroke="#E5E7EB"
+                StrokeShape="RoundRectangle 18"
+                Padding="18">
+                <VerticalStackLayout Spacing="8">
+                    <Label
+                        Text="Latest return data"
+                        TextColor="#6B7280"
+                        FontSize="12"
+                        FontAttributes="Bold" />
+                    <Label
+                        Text="{Binding ReverseDataText}"
+                        TextColor="#111827"
+                        FontSize="16" />
+                    <Label
+                        Text="{Binding LifecycleText}"
+                        TextColor="#6B7280"
+                        FontSize="12" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Label
+                Text="Examples"
+                TextColor="#111827"
+                FontSize="22"
+                FontAttributes="Bold"
+                Margin="0,8,0,0" />
+
+            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 18" Padding="18">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Push page + parameters" TextColor="#111827" FontSize="17" FontAttributes="Bold" />
+                    <Label Text="Calls ShellNavigation.PushAsync&lt;DetailsPage&gt; and handles DataReceivedAsync in the destination ViewModel." TextColor="#6B7280" />
+                    <Button Text="Open details page" Command="{Binding ShowDetailsCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 18" Padding="18">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Modal page" TextColor="#111827" FontSize="17" FontAttributes="Bold" />
+                    <Label Text="Pushes a registered page modally and passes data into its ViewModel." TextColor="#6B7280" />
+                    <Button Text="Open details as modal" Command="{Binding PushModalCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 18" Padding="18">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Popup + return data" TextColor="#111827" FontSize="17" FontAttributes="Bold" />
+                    <Label Text="Shows a CommunityToolkit popup with ViewModel injection, then dismisses it with data." TextColor="#6B7280" />
+                    <Button Text="Show popup" Command="{Binding ShowPopupCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 18" Padding="18">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Modal navigation stack" TextColor="#111827" FontSize="17" FontAttributes="Bold" />
+                    <Label Text="Opens a NavigationPage modal and closes the whole modal stack with PopModalStackAsync." TextColor="#6B7280" />
+                    <Button Text="Open modal stack" Command="{Binding NavigateTestCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 18" Padding="18">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Multi-page stack" TextColor="#111827" FontSize="17" FontAttributes="Bold" />
+                    <Label Text="Pushes multiple pages in one call with the same initial parameter." TextColor="#6B7280" />
+                    <Button Text="Push Details > Step 2 > Step 3" Command="{Binding PushMultiStackCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 18" Padding="18">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Tabs and flyout" TextColor="#111827" FontSize="17" FontAttributes="Bold" />
+                    <Label Text="ChangeTabAsync sends data to a tab. ReplaceAsync swaps Shell content and passes data to the replacement page." TextColor="#6B7280" />
+                    <Button Text="Switch to tab two" Command="{Binding ChangeTabCommand}" />
+                    <Button Text="Replace flyout content" Command="{Binding ReplaceContentCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Label
+                Text="All examples use ShellNavigation static methods. The older Shell extension methods remain available but are deprecated."
+                TextColor="#6B7280"
+                FontSize="12"
+                HorizontalTextAlignment="Center"
+                Margin="8,8" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Sample.ViewModels"
+             xmlns:extensions="clr-namespace:ShellInject.Extensions;assembly=ShellInject"
+             extensions:ShellInjectPageExtensions.ViewModelType="{x:Type vm:TabbedPagedTwoViewModel}"
+             x:DataType="vm:TabbedPagedTwoViewModel"
+             Title="Tab Two"
+             BackgroundColor="#F7F8FC"
+             x:Class="Sample.ContentPages.TabbedPageTwo">
+    <VerticalStackLayout Spacing="16" Padding="20,24">
+        <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 20" Padding="20">
+            <VerticalStackLayout Spacing="10">
+                <Label Text="Tab two" TextColor="#111827" FontSize="24" FontAttributes="Bold" />
+                <Label Text="This screen uses the explicit XAML ViewModelType binding." TextColor="#6B7280" />
+                <Label Text="Received parameter" TextColor="#6B7280" FontSize="12" FontAttributes="Bold" />
+                <Label Text="{Binding DataReceivedText}" TextColor="#111827" FontSize="16" />
+            </VerticalStackLayout>
+        </Border>
+    </VerticalStackLayout>
+</ContentPage>

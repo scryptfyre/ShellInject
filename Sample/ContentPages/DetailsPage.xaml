@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Sample.ViewModels"
+             xmlns:contentViews="clr-namespace:Sample.ContentViews"
+             x:DataType="vm:DetailsViewModel"
+             Title="Details"
+             BackgroundColor="#F7F8FC"
+             x:Class="Sample.ContentPages.DetailsPage">
+    <ScrollView>
+        <VerticalStackLayout Spacing="16" Padding="20,24,20,32">
+            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 20" Padding="20">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="DetailsPage" TextColor="#111827" FontSize="26" FontAttributes="Bold" />
+                    <Label Text="This page is resolved by ShellInject's convention binding." TextColor="#6B7280" />
+                    <Label Text="Received parameter" TextColor="#6B7280" FontSize="12" FontAttributes="Bold" Margin="0,8,0,0" />
+                    <Label Text="{Binding DataReceivedText}" TextColor="#111827" FontSize="16" />
+                    <Label Text="{Binding LifecycleText}" TextColor="#6B7280" FontSize="12" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 20" Padding="20">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Return or route data" TextColor="#111827" FontSize="18" FontAttributes="Bold" />
+                    <Button Text="Pop with return data" Command="{Binding PopWithParameterCommand}" />
+                    <Button Text="Send data to examples page" Command="{Binding SendDataToMainCommand}" />
+                    <Button Text="Pop to root with data" Command="{Binding PopToRootCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <contentViews:TestContentView />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

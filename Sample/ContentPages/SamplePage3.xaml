@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Sample.ViewModels"
+             x:DataType="vm:SamplePage3ViewModel"
+             Title="Modal Step 2"
+             BackgroundColor="#F7F8FC"
+             x:Class="Sample.ContentPages.SamplePage3">
+    <ScrollView>
+        <VerticalStackLayout Spacing="16" Padding="20,24,20,32">
+            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 20" Padding="20">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Stack page" TextColor="#111827" FontSize="24" FontAttributes="Bold" />
+                    <Label Text="This page demonstrates normal push navigation inside the modal stack." TextColor="#6B7280" />
+                    <Label Text="{Binding DataReceivedText}" TextColor="#111827" FontSize="16" />
+                </VerticalStackLayout>
+            </Border>
+            <Button Command="{Binding PushCommand}" Text="Push SamplePage2 again" />
+            <Button Command="{Binding CloseCommand}" Text="Close stack with data" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

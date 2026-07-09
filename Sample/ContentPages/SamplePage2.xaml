@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Sample.ViewModels"
+             x:DataType="vm:SamplePage2ViewModel"
+             Title="Modal Step 1"
+             BackgroundColor="#F7F8FC"
+             x:Class="Sample.ContentPages.SamplePage2">
+    <ScrollView>
+        <VerticalStackLayout Spacing="16" Padding="20,24,20,32">
+            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 20" Padding="20">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Modal navigation root" TextColor="#111827" FontSize="24" FontAttributes="Bold" />
+                    <Label Text="PushModalWithNavigationAsync wrapped this page in a NavigationPage modal." TextColor="#6B7280" />
+                    <Label Text="{Binding DataReceivedText}" TextColor="#111827" FontSize="16" />
+                </VerticalStackLayout>
+            </Border>
+            <Button Command="{Binding PushCommand}" Text="Push another modal page" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

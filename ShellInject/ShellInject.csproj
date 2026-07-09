@@ -1,0 +1,88 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>net10.0;net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+        <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+
+        <!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
+        <!-- <TargetFrameworks>$(TargetFrameworks);net8.0-tizen</TargetFrameworks> -->
+        <UseMaui>true</UseMaui>
+        <SingleProject>true</SingleProject>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
+        <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
+
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageVersion>10.0.3</PackageVersion>
+        <PackageId>ShellInject</PackageId>
+        <Authors>Jamie Smith</Authors>
+        <Copyright>ScryptFyre 2026</Copyright>
+        <NeutralLanguage>en</NeutralLanguage>
+        <Owners>ScryptFyre</Owners>
+        <Summary>Typed .NET MAUI Shell navigation with automatic ViewModel binding, DI activation, lifecycle hooks, and data passing.</Summary>
+        <Description>ShellInject simplifies .NET MAUI Shell navigation for MVVM apps. It automatically binds pages and popups to ViewModels by convention or explicit XAML mapping, registers routes by page type, resolves ViewModels through dependency injection, and delivers forward and reverse navigation data through lifecycle-aware ViewModel hooks.</Description>
+        <PackageTags>.NET MAUI, navigation, ViewModel, DI, cross-platform, MVVM, mobile development, Shell Navigation, Xamarin.Forms, dependency injection, developer tools</PackageTags>
+        <Title>ShellInject</Title>
+        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/JamiSmith/ShellInject</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/JamiSmith/ShellInject</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
+        <EnablePackageValidation>true</EnablePackageValidation>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <Deterministic>true</Deterministic>
+        <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+        <PackageReleaseNotes>
+            • Added automatic ViewModel convention binding from UseShellInject()
+            • Kept ViewModelType XAML binding as an explicit override with precedence over convention binding
+            • Added configurable ShellInjectOptions for convention binding behavior
+            • Hardened modal, modal-stack, multi-stack, tab, and reverse-data navigation flows
+            • Preserved obsolete Shell extension methods for non-breaking compatibility while forwarding to ShellNavigation
+            • Added source/symbol package support, package validation, deterministic build settings, and CI package validation
+            • Updated NuGet dependencies to the latest available versions for this release
+            • Expanded unit coverage for convention binding, navigation edge cases, and compatibility behavior
+            • Reworked README documentation with setup, usage, compatibility, and trimming guidance
+        </PackageReleaseNotes>
+        
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Package dependencies required by ShellInject for navigation, bindings, and popups. -->
+        <PackageReference Include="Microsoft.Maui.Controls" Version="[10.0.80,)" />
+        <PackageReference Include="CommunityToolkit.Maui" Version="[14.2.0,)" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="[8.4.2,)" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" PrivateAssets="all" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Services\" />
+    </ItemGroup>
+    
+    <PropertyGroup>
+        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>ShellInjectTests</_Parameter1>
+        </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+
+
+</Project>

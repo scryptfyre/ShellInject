@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <ExcludeByFile>**/obj/**/*.cs</ExcludeByFile>
+          <ExcludeByAttribute>CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+          <Threshold>100</Threshold>
+          <ThresholdType>line</ThresholdType>
+          <ThresholdStat>total</ThresholdStat>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

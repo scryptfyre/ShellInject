@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Sample.ViewModels"
+             x:DataType="vm:TabbedPageOneViewModel"
+             Title="Tab One"
+             BackgroundColor="#F7F8FC"
+             x:Class="Sample.ContentPages.TabbedPageOne">
+    <VerticalStackLayout Spacing="16" Padding="20,24">
+        <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 20" Padding="20">
+            <VerticalStackLayout Spacing="10">
+                <Label Text="Tab one" TextColor="#111827" FontSize="24" FontAttributes="Bold" />
+                <Label Text="ChangeTabAsync can select another tab and deliver a parameter to its ViewModel." TextColor="#6B7280" />
+            </VerticalStackLayout>
+        </Border>
+        <Button Command="{Binding ShowTabTwoCommand}" Text="Send data to tab two" />
+    </VerticalStackLayout>
+</ContentPage>

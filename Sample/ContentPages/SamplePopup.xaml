@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+              xmlns:vm="clr-namespace:Sample.ViewModels"
+               x:DataType="vm:SamplePopupViewModel"
+              x:Class="Sample.ContentPages.SamplePopup">
+    <toolkit:Popup.Content>
+        <Border
+            BackgroundColor="White"
+            Stroke="#E5E7EB"
+            StrokeShape="RoundRectangle 24"
+            Padding="24"
+            WidthRequest="320">
+        <VerticalStackLayout Spacing="16">
+            <Label Text="Popup" TextColor="#111827" FontSize="24" FontAttributes="Bold" />
+            <Label Text="{Binding Message}" TextColor="#4B5563" />
+            <Button
+                Command="{Binding DismissCommand}"
+                Text="Dismiss with data" />
+        </VerticalStackLayout>
+        </Border>
+    </toolkit:Popup.Content>
+</toolkit:Popup>
