@@ -82,6 +82,14 @@ public class NavigationBehaviorCoverageTests
     }
 
     [Fact]
+    public async Task PushMultiStackAsync_WhenPageTypesIsNull_ShouldThrow()
+    {
+        var nav = new ShellInjectNavigation();
+
+        await Assert.ThrowsAsync<NullReferenceException>(() => nav.PushMultiStackAsync(new Shell(), null!, _parameter, true, false));
+    }
+
+    [Fact]
     public async Task PushMultiStackAsync_WhenPageTypesIsEmpty_ShouldThrow()
     {
         var nav = new ShellInjectNavigation();

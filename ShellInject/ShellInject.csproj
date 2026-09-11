@@ -19,7 +19,7 @@
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
 
         <PackageReadmeFile>README.md</PackageReadmeFile>
-        <PackageVersion>10.0.3</PackageVersion>
+        <PackageVersion>10.1.0</PackageVersion>
         <PackageId>ShellInject</PackageId>
         <Authors>Jamie Smith</Authors>
         <Copyright>ScryptFyre 2026</Copyright>
@@ -34,6 +34,7 @@
         <RepositoryUrl>https://github.com/scryptfyre/ShellInject</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <EnablePackageValidation>true</EnablePackageValidation>
+        <PackageValidationBaselineVersion>10.0.3</PackageValidationBaselineVersion>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -41,15 +42,15 @@
         <Deterministic>true</Deterministic>
         <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
         <PackageReleaseNotes>
-            • Added automatic ViewModel convention binding from UseShellInject()
-            • Kept ViewModelType XAML binding as an explicit override with precedence over convention binding
-            • Added configurable ShellInjectOptions for convention binding behavior
-            • Hardened modal, modal-stack, multi-stack, tab, and reverse-data navigation flows
-            • Preserved obsolete Shell extension methods for non-breaking compatibility while forwarding to ShellNavigation
-            • Added source/symbol package support, package validation, deterministic build settings, and CI package validation
-            • Updated NuGet dependencies to the latest available versions for this release
-            • Expanded unit coverage for convention binding, navigation edge cases, and compatibility behavior
-            • Reworked README documentation with setup, usage, compatibility, and trimming guidance
+            • Added typed ViewModel data hooks and parameter-first generic push overloads
+            • Added explicit ViewModel registrations and cached convention discovery
+            • Added optional error reporting for recovered binding and lifecycle failures
+            • Added typed selection for materialized tabs while preserving index-based navigation
+            • Isolated popup tracking by Shell and preserved data across delayed lifecycle callbacks
+            • Prefer exact page types for data delivery while retaining legacy name fallback
+            • Added OnDisappearing alias without removing or obsoleting existing overrides
+            • Preserved existing method signatures, extension wrappers, and public validation exception types
+            • Validate package API compatibility against 10.0.3 and update SourceLink build tooling
         </PackageReleaseNotes>
         
     </PropertyGroup>
@@ -63,7 +64,7 @@
         <PackageReference Include="Microsoft.Maui.Controls" Version="[10.0.80,)" />
         <PackageReference Include="CommunityToolkit.Maui" Version="[14.2.0,)" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="[8.4.2,)" />
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" PrivateAssets="all" />
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.401" PrivateAssets="all" />
     </ItemGroup>
     
     <ItemGroup>

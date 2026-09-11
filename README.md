@@ -4,6 +4,86 @@ ShellInject is a small .NET MAUI library for apps that use `Shell` and MVVM. It 
 
 The goal is simple: call `UseShellInject()` once, write normal MAUI pages and ViewModels, and navigate without string routes or code-behind plumbing.
 
+## What's New in 10.1
+
+This release adds opt-in APIs while retaining the existing signatures, named parameters,
+extension wrappers, and public argument-validation exception behavior from 10.0.3.
+
+### Typed navigation data
+
+```csharp
+public sealed class DetailsViewModel : ShellInjectViewModel<string>
+{
+    public override Task DataReceivedAsync(string? orderId)
+    {
+        // Load the order here.
+        return Task.CompletedTask;
+    }
+
+    public override Task ReverseDataReceivedAsync(string? result)
+    {
+        return Task.CompletedTask;
+    }
+}
+
+await ShellNavigation.PushAsync<DetailsPage, string>(orderId);
+await ShellNavigation.PushModalAsync<DetailsPage, string>(orderId, shell: myShell);
+```
+
+The existing `PushAsync<DetailsPage>(parameter: orderId)` works with typed ViewModels too.
+The page type and its BindingContext are still connected at runtime: these APIs do not
+provide compile-time validation of the page's expected parameter type. Incompatible data
+is reported through `ErrorHandler` and is not delivered to the typed hook. Null is delivered
+to reference/nullable parameter types when the navigation operation delivers null; existing
+operations that omit callbacks for null parameters retain that behavior. Use the non-generic
+base if forward and reverse data have different types.
+
+### Explicit registration and diagnostics
+
+```csharp
+builder.UseShellInject(options =>
+{
+    options.RegisterViewModel<DetailsPage, DetailsViewModel>();
+    options.ErrorHandler = exception => System.Diagnostics.Debug.WriteLine(exception);
+});
+```
+
+Registrations bypass naming discovery, take precedence over conventions, and use the same
+DI activation as convention binding. They participate in automatic binding, so keep
+`AutoBindViewModelsByConvention` enabled. Existing BindingContexts and explicit XAML
+`ViewModelType` mappings still take priority. Configure mappings during startup.
+
+Convention results are cached by view type and configured suffixes. The cache is cleared
+when assemblies load and when `UseShellInject` configures the library. The cache stores
+types, not ViewModel instances, so transient DI lifetimes remain unchanged.
+
+`ErrorHandler` reports recovered binding/lifecycle failures that were previously silent.
+It does not replace exceptions already returned by navigation Tasks. Missing convention
+matches remain normal no-ops. Exceptions thrown by the diagnostic handler are contained.
+
+Explicit registrations include public-constructor preservation annotations and reduce
+reliance on reflection discovery. They are not a claim of complete NativeAOT support;
+validate a trimmed native publish of your application and preserve dependencies as needed.
+
+### Additional compatibility improvements
+
+- `OnDisappearing()` is the preferred spelling for new ViewModel overrides. The existing
+  `OnDisAppearing()` hook and command still work; the base legacy hook forwards to the new
+  one. Override one spelling per ViewModel. Existing overrides receive no new obsolete warnings.
+- `ChangeTabAsync<OrdersPage>(shell: myShell, parameter: filter)` prefers an already
+  materialized tab with that page type. It does not instantiate other tab templates to search.
+  If no match exists, it uses the supplied `tabIndex` (default 0) and the existing index rules.
+- `SendDataToPageAsync<TPage>` prefers an exact type match, retaining the old simple-name
+  fallback when the exact type is absent.
+- Popup tracking is per Shell. Show and dismiss using the same Shell instance in multi-window apps.
+- Async lifecycle callbacks retain their original navigation data even if navigation state
+  is subsequently cleared or replaced. The returned navigation Task retains its existing
+  semantics; it does not guarantee completion of every asynchronous lifecycle event handler.
+
+`ReplaceAsync` continues to target the Shell visual hierarchy by its existing route convention.
+Global `si_` push routes are not absolute flyout routes. Popup support stays in the main package
+so existing consumers do not need to install or reference another package after updating.
+
 ## What ShellInject Does
 
 - Binds pages and popups to ViewModels automatically by naming convention.

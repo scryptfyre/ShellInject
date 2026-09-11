@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using CommunityToolkit.Maui.Views;
 using ShellInject.Interfaces;
 using ShellInject.Services;
@@ -73,9 +74,9 @@ public static class ShellInjectPageExtensions
         {
             BindViewModel(bindable, viewModelType, replaceExistingBindingContext: true);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // ignored
+            ShellInjectInitializer.ReportError(ex);
         }
     }
 
@@ -104,20 +105,54 @@ public static class ShellInjectPageExtensions
             BindViewModel(bindable, viewModelType, replaceExistingBindingContext: false);
             return GetBindingContext(bindable) is not null;
         }
-        catch
+        catch (Exception ex)
         {
+            ShellInjectInitializer.ReportError(ex);
             return false;
         }
     }
 
+    // Cache of convention lookups keyed by view type and the configured suffixes, so repeated
+    // navigation events do not re-scan loaded assemblies. A null value means "no match or ambiguous".
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, Type?> ViewModelResolutionCache = new();
+
+    static ShellInjectPageExtensions()
+    {
+        AppDomain.CurrentDomain.AssemblyLoad += (_, _) => ClearConventionResolutionCache();
+    }
+
+    internal static void ClearConventionResolutionCache()
+    {
+        ViewModelResolutionCache.Clear();
+    }
+
+    private static string BuildResolutionKey(Type viewType)
+    {
+        var options = ShellInjectInitializer.Options;
+        return $"{viewType.AssemblyQualifiedName ?? viewType.FullName ?? viewType.Name}|{options.PageSuffix}|{options.ViewModelSuffix}";
+    }
+
     private static Type? ResolveViewModelTypeByConvention(Type viewType)
     {
-        var candidateNames = BuildViewModelCandidateNames(viewType).ToArray();
-        if (candidateNames.Length == 0)
+        if (ShellInjectInitializer.Options.TryGetRegisteredViewModel(viewType, out var registeredType))
         {
-            return null;
+            return registeredType;
         }
 
+        var key = BuildResolutionKey(viewType);
+        if (ViewModelResolutionCache.TryGetValue(key, out var cachedType))
+        {
+            return cachedType;
+        }
+
+        var resolvedType = ResolveViewModelTypeByConventionUncached(viewType);
+        ViewModelResolutionCache[key] = resolvedType;
+        return resolvedType;
+    }
+
+    private static Type? ResolveViewModelTypeByConventionUncached(Type viewType)
+    {
+        var candidateNames = BuildViewModelCandidateNames(viewType).ToArray();
         foreach (var candidateName in candidateNames)
         {
             var preferredType = viewType.Assembly.GetType(BuildPreferredFullName(viewType, candidateName), throwOnError: false);
@@ -244,9 +279,9 @@ public static class ShellInjectPageExtensions
             {
                 vmInstance.OnAppearing();
             }
-            catch
+            catch (Exception ex)
             {
-                // ignored
+                ShellInjectInitializer.ReportError(ex);
             }
         };
 
@@ -256,9 +291,9 @@ public static class ShellInjectPageExtensions
             {
                 vmInstance.OnDisAppearing();
             }
-            catch
+            catch (Exception ex)
             {
-                // ignored
+                ShellInjectInitializer.ReportError(ex);
             }
         };
 
@@ -279,7 +314,7 @@ public static class ShellInjectPageExtensions
     /// Thrown if the ViewModel instance cannot be created either because the type is invalid
     /// or the ServiceProvider is not properly configured.
     /// </exception>
-    private static object ResolveViewModel(Type viewModelType)
+    private static object ResolveViewModel([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type viewModelType)
     {
         if (Injector.ServiceProvider is not { } provider)
         {
@@ -298,10 +333,10 @@ public static class ShellInjectPageExtensions
     /// Retrieves the value of the ViewModelType attached property from the specified bindable object.
     /// </summary>
     /// <param name="obj">The bindable object from which to retrieve the ViewModelType.</param>
-    /// <returns>The type of the ViewModel set on the bindable object.</returns>
-    public static Type GetViewModelType(BindableObject obj)
+    /// <returns>The type of the ViewModel set on the bindable object, or null when no explicit mapping is set.</returns>
+    public static Type? GetViewModelType(BindableObject obj)
     {
-        return (Type)obj.GetValue(ViewModelTypeProperty);
+        return (Type?)obj.GetValue(ViewModelTypeProperty);
     }
 
     /// <summary>

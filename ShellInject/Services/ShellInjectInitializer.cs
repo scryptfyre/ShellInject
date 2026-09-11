@@ -65,6 +65,22 @@ internal class ShellInjectInitializer : IMauiInitializeService
         return ServiceProvider ?? throw new InvalidOperationException(ServiceProviderNotInitializedMessage);
     }
 
+    /// <summary>
+    /// Reports a recovered internal error to the configured <see cref="ShellInjectOptions.ErrorHandler"/>, if any.
+    /// Exceptions thrown by the handler are ignored so diagnostics never break navigation behavior.
+    /// </summary>
+    internal static void ReportError(Exception exception)
+    {
+        try
+        {
+            Options.ErrorHandler?.Invoke(exception);
+        }
+        catch (Exception handlerException)
+        {
+            _ = handlerException;
+        }
+    }
+
     // NOTE:  -Called automatically by MAUI after the final service provider is built:
     /// <summary>
     /// Initializes the dependency injection system for the application by assigning the provided service provider

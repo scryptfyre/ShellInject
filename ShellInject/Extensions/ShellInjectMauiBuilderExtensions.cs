@@ -44,6 +44,7 @@ public static class ShellInjectMauiBuilderExtensions
     public static MauiAppBuilder UseShellInject(this MauiAppBuilder builder, Action<ShellInjectOptions>? configure)
     {
         configure?.Invoke(ShellInjectInitializer.Options);
+        ShellInjectPageExtensions.ClearConventionResolutionCache();
         builder.Services.AddSingleton<IMauiInitializeService, ShellInjectInitializer>();
         InitializePageHandlerMapping();
         
@@ -276,9 +277,9 @@ public static class ShellInjectMauiBuilderExtensions
                 DetachShellNavigatedHandler(shell);
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // just catch it
+            ShellInjectInitializer.ReportError(ex);
         }
         finally
         {
