@@ -5,6 +5,9 @@
 /// </summary>
 public interface IShellInjectShellViewModel
 {
+    /// <summary>
+    /// Gets or sets a value indicating whether <see cref="InitializedAsync"/> has already run for this instance.
+    /// </summary>
     bool IsInitialized { get; set; }
 
     /// <summary>
@@ -36,9 +39,9 @@ public interface IShellInjectShellViewModel
     /// <returns>A task representing the asynchronous operation.</returns>
     Task OnAppearedAsync();
 
-    // /// <summary>
-    // /// OnAppearing Method
-    // /// </summary>
+    /// <summary>
+    /// Executes tasks or operations when the view appears on screen.
+    /// </summary>
     void OnAppearing();
 
     /// <summary>
