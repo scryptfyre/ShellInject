@@ -25,10 +25,10 @@
         <Copyright>ScryptFyre 2026</Copyright>
         <NeutralLanguage>en</NeutralLanguage>
         <Owners>ScryptFyre</Owners>
-        <Summary>Typed .NET MAUI Shell navigation with automatic ViewModel binding, DI activation, lifecycle hooks, and data passing.</Summary>
-        <Description>ShellInject simplifies .NET MAUI Shell navigation for MVVM apps. It automatically binds pages and popups to ViewModels by convention or explicit XAML mapping, registers routes by page type, resolves ViewModels through dependency injection, and delivers forward and reverse navigation data through lifecycle-aware ViewModel hooks.</Description>
-        <PackageTags>.NET MAUI, navigation, ViewModel, DI, cross-platform, MVVM, mobile development, Shell Navigation, Xamarin.Forms, dependency injection, developer tools</PackageTags>
-        <Title>ShellInject</Title>
+        <Summary>.NET MAUI Shell navigation for MVVM. Navigate by page type and pass objects between ViewModels.</Summary>
+        <Description>.NET MAUI Shell navigation for MVVM apps. Navigate by page type, pass objects to the next page, and return results to the previous one without string routes, QueryProperty, or IQueryAttributable. Pages and popups are bound to ViewModels automatically, ViewModels are resolved through dependency injection, and appearing, disappearing, and navigation data callbacks run in the ViewModel. Supports pushes, modals, tabs, flyout items, and CommunityToolkit popups.</Description>
+        <PackageTags>maui;dotnet-maui;net-maui;shell;shell-navigation;navigation;mvvm;viewmodel;dependency-injection;popup;communitytoolkit;android;ios;maccatalyst</PackageTags>
+        <Title>ShellInject - .NET MAUI Shell Navigation for MVVM</Title>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
         <PackageProjectUrl>https://github.com/scryptfyre/ShellInject</PackageProjectUrl>
         <RepositoryUrl>https://github.com/scryptfyre/ShellInject</RepositoryUrl>

@@ -24,6 +24,47 @@ await ShellNavigation.PopAsync(parameter: "Saved");
 - Pass any object forward (`DataReceivedAsync`) or back (`ReverseDataReceivedAsync`). Nothing is serialized into a query string.
 - Works with pushes, multi-page stacks, modals, modal navigation stacks, tabs, flyout items, and CommunityToolkit popups.
 
+## Compared to QueryProperty and IQueryAttributable
+
+Out of the box, passing an object to another page with Shell looks like this:
+
+```csharp
+// AppShell.xaml.cs
+Routing.RegisterRoute(nameof(OrderPage), typeof(OrderPage));
+
+// MauiProgram.cs: register the page and ViewModel, then set BindingContext in the page constructor
+builder.Services.AddTransient<OrderPage>();
+builder.Services.AddTransient<OrderViewModel>();
+
+// Navigating
+await Shell.Current.GoToAsync(nameof(OrderPage), new Dictionary<string, object>
+{
+    ["Order"] = order
+});
+
+// OrderViewModel
+public class OrderViewModel : IQueryAttributable
+{
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        var order = (Order)query["Order"];
+    }
+}
+```
+
+With ShellInject:
+
+```csharp
+await ShellNavigation.PushAsync<OrderPage, Order>(order);
+
+public class OrderViewModel : ShellInjectViewModel<Order>
+{
+    public override Task DataReceivedAsync(Order? order) { ... }
+}
+```
+
+The built-in approach works fine. ShellInject is for apps where the string keys, route registration, and BindingContext wiring get repetitive. It also keeps data sent forward separate from data returned by a page, and it passes data to popups and tabs the same way it does to pages.
+
 ## Requirements
 
 - .NET 10 with the .NET MAUI workload
