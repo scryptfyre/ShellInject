@@ -1,35 +1,38 @@
-<?xml version="1.0" encoding="utf-8"?>
-
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:Sample.ViewModels"
-             xmlns:contentViews="clr-namespace:Sample.ContentViews"
-             x:DataType="vm:DetailsViewModel"
-             Title="Details"
-             BackgroundColor="#F7F8FC"
-             x:Class="Sample.ContentPages.DetailsPage">
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Sample.ViewModels" x:Class="Sample.ContentPages.DetailsPage" x:DataType="vm:DetailsViewModel" Title="Request details">
     <ScrollView>
-        <VerticalStackLayout Spacing="16" Padding="20,24,20,32">
-            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 20" Padding="20">
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="DetailsPage" TextColor="#111827" FontSize="26" FontAttributes="Bold" />
-                    <Label Text="This page is resolved by ShellInject's convention binding." TextColor="#6B7280" />
-                    <Label Text="Received parameter" TextColor="#6B7280" FontSize="12" FontAttributes="Bold" Margin="0,8,0,0" />
-                    <Label Text="{Binding DataReceivedText}" TextColor="#111827" FontSize="16" />
-                    <Label Text="{Binding LifecycleText}" TextColor="#6B7280" FontSize="12" />
-                </VerticalStackLayout>
-            </Border>
-
-            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 20" Padding="20">
+        <VerticalStackLayout Style="{StaticResource PageContent}">
+            <Label Text="{Binding Presentation}" Style="{StaticResource Eyebrow}" />
+            <Label Text="A request, received." Style="{StaticResource PageTitle}" />
+            <Label Text="This is the destination. ShellInject created DetailsViewModel by convention and delivered a DemoRequest object." Style="{StaticResource BodyMuted}" />
+            <Border Style="{StaticResource ResultCard}">
                 <VerticalStackLayout Spacing="12">
-                    <Label Text="Return or route data" TextColor="#111827" FontSize="18" FontAttributes="Bold" />
-                    <Button Text="Pop with return data" Command="{Binding PopWithParameterCommand}" />
-                    <Button Text="Send data to examples page" Command="{Binding SendDataToMainCommand}" />
-                    <Button Text="Pop to root with data" Command="{Binding PopToRootCommand}" />
+                    <Label Text="INCOMING / DemoRequest" Style="{StaticResource Eyebrow}" />
+                    <Label Text="{Binding Reference}" Style="{StaticResource Heading}" AutomationId="ReceivedReference" />
+                    <Label Text="{Binding Note}" />
                 </VerticalStackLayout>
             </Border>
-
-            <contentViews:TestContentView />
+            <Border Style="{StaticResource CodeCard}">
+                <Label Text="ShellInjectViewModel&lt;DemoRequest&gt;&#10;&#10;override Task DataReceivedAsync(&#10;    DemoRequest? parameter)" Style="{StaticResource Code}" />
+            </Border>
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Write the reply" Style="{StaticResource Heading}" />
+                    <Label Text="The reference and your message will travel back as a DemoResult." Style="{StaticResource BodyMuted}" />
+                    <Entry Text="{Binding ResultText}" MaxLength="120" Placeholder="Result message" SemanticProperties.Description="Result message to return to the lab" AutomationId="ResultEntry" />
+                    <Label Text="{Binding Status}" Style="{StaticResource Caption}" />
+                    <VerticalStackLayout Spacing="12" IsEnabled="{Binding CanInteract}">
+                        <Button Text="Return result to lab" Command="{Binding ReturnCommand}" AutomationId="ReturnResult" />
+                        <Button Text="Send update without leaving" Command="{Binding SendUpdateCommand}" IsVisible="{Binding CanSendDirectly}" Style="{StaticResource SecondaryButton}" AutomationId="SendUpdate" />
+                    </VerticalStackLayout>
+                    <Label Text="PopAsync detects the current context. The lab receives ReverseDataReceivedAsync. Using the system Back button returns without sending a result." Style="{StaticResource Caption}" />
+                </VerticalStackLayout>
+            </Border>
+            <Label Text="{Binding ErrorMessage}" Style="{StaticResource Error}" />
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
+            <Label Text="{Binding ServiceMessage}" Style="{StaticResource Caption}" />
+            <Label Text="SOURCE / DetailsViewModel.cs + DemoRequest.cs" Style="{StaticResource Caption}" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

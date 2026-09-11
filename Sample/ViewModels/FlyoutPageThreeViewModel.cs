@@ -1,18 +1,14 @@
-using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using Sample.ContentPages;
+using Sample.Models;
+using Sample.Services;
+using ShellInject;
 
 namespace Sample.ViewModels;
 
-public partial class FlyoutPageThreeViewModel : BaseViewModel
+public partial class FlyoutPageThreeViewModel(DemoSession session) : BaseViewModel(session)
 {
-    [ObservableProperty] private string _dataReceivedText = "Open this from the examples page to see ReplaceAsync data.";
-
-    public override Task DataReceivedAsync(object? parameter)
-    {
-        if (parameter is string data)
-        {
-            DataReceivedText = data;
-        }
-
-        return Task.CompletedTask;
-    }
+    [RelayCommand]
+    private Task ReturnToLabAsync() => RunAsync("ReplaceAsync<MainPage>", () =>
+        ShellNavigation.ReplaceAsync<MainPage>(parameter: new DemoResult(Session.ValidReference, "Shell destination replaced successfully")));
 }

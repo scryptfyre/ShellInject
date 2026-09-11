@@ -10,6 +10,16 @@ namespace ShellInject;
 /// </summary>
 public static class ShellNavigation
 {
+    /// <summary>Pushes a page with a typed, parameter-first call. Existing one-type-argument overloads remain unchanged.</summary>
+    public static Task PushAsync<TPage, TParameter>(TParameter parameter, Shell? shell = null, bool animate = true)
+        where TPage : ContentPage
+        => PushAsync<TPage>(shell, parameter, animate);
+
+    /// <summary>Pushes a modal page with a typed, parameter-first call.</summary>
+    public static Task PushModalAsync<TPage, TParameter>(TParameter parameter, Shell? shell = null, bool animate = true)
+        where TPage : ContentPage
+        => PushModalAsync<TPage>(shell, parameter, animate);
+
     /// <summary>
     /// Pushes a page of the specified type onto the navigation stack asynchronously.
     /// </summary>
@@ -98,6 +108,12 @@ public static class ShellNavigation
     public static Task ChangeTabAsync(Shell? shell = null, int tabIndex = 0, object? parameter = null, bool popToRootFirst = true)
     {
         return ShellInjectNavigation.Instance.ChangeTabAsync(GetShellOrThrow(shell), tabIndex, parameter, popToRootFirst);
+    }
+
+    /// <summary>Selects a materialized tab by page type, falling back to the supplied index when no match exists.</summary>
+    public static Task ChangeTabAsync<TPage>(Shell? shell = null, int tabIndex = 0, object? parameter = null, bool popToRootFirst = true) where TPage : ContentPage
+    {
+        return ShellInjectNavigation.Instance.ChangeTabAsync(GetShellOrThrow(shell), tabIndex, parameter, popToRootFirst, typeof(TPage));
     }
 
     /// <summary>

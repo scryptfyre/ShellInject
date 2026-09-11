@@ -1,55 +1,88 @@
 # ShellInject
 
-ShellInject is a small .NET MAUI library for apps that use `Shell` and MVVM. It removes the repetitive parts of Shell navigation: route registration, ViewModel creation, passing data forward, returning data back, and calling common page lifecycle hooks from your ViewModels.
+[![NuGet](https://img.shields.io/nuget/v/ShellInject.svg)](https://www.nuget.org/packages/ShellInject)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/scryptfyre/ShellInject/blob/main/LICENSE)
 
-The goal is simple: call `UseShellInject()` once, write normal MAUI pages and ViewModels, and navigate without string routes or code-behind plumbing.
+ShellInject handles the plumbing around .NET MAUI Shell navigation in MVVM apps. You navigate by page type, pass real objects between ViewModels, and get lifecycle callbacks in the ViewModel instead of the page's code-behind.
 
-## What ShellInject Does
+```csharp
+// MainViewModel
+await ShellNavigation.PushAsync<OrderPage, Order>(order);
 
-- Binds pages and popups to ViewModels automatically by naming convention.
-- Keeps the existing XAML `ViewModelType` binding available for explicit mappings.
-- Resolves ViewModels from MAUI dependency injection, or creates them with `ActivatorUtilities` when they are not registered.
-- Registers Shell routes automatically when navigating by page type.
-- Passes data into destination ViewModels through `DataReceivedAsync`.
-- Returns data to previous pages through `ReverseDataReceivedAsync`.
-- Provides lifecycle hooks for appearing, disappearing, first initialization, and post-navigation appear logic.
-- Supports Shell pushes, multi-page stacks, modals, modal navigation stacks, tabs, flyout replacement, and CommunityToolkit popups.
-- Keeps the older `Shell` extension methods available for compatibility while recommending the newer `ShellNavigation` API.
+// OrderViewModel
+public override Task DataReceivedAsync(Order? order) { ... }
+
+// Send a result back to MainViewModel.ReverseDataReceivedAsync
+await ShellNavigation.PopAsync(parameter: "Saved");
+```
+
+## Features
+
+- Navigate by page type. Routes are registered for you.
+- Pages and popups are bound to ViewModels by naming convention, by an attribute in XAML, or by registration at startup.
+- ViewModels are resolved from the MAUI service provider, so constructor injection works.
+- Pass any object forward (`DataReceivedAsync`) or back (`ReverseDataReceivedAsync`). Nothing is serialized into a query string.
+- Works with pushes, multi-page stacks, modals, modal navigation stacks, tabs, flyout items, and CommunityToolkit popups.
+
+## Compared to QueryProperty and IQueryAttributable
+
+Out of the box, passing an object to another page with Shell looks like this:
+
+```csharp
+// AppShell.xaml.cs
+Routing.RegisterRoute(nameof(OrderPage), typeof(OrderPage));
+
+// MauiProgram.cs: register the page and ViewModel, then set BindingContext in the page constructor
+builder.Services.AddTransient<OrderPage>();
+builder.Services.AddTransient<OrderViewModel>();
+
+// Navigating
+await Shell.Current.GoToAsync(nameof(OrderPage), new Dictionary<string, object>
+{
+    ["Order"] = order
+});
+
+// OrderViewModel
+public class OrderViewModel : IQueryAttributable
+{
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    {
+        var order = (Order)query["Order"];
+    }
+}
+```
+
+With ShellInject:
+
+```csharp
+await ShellNavigation.PushAsync<OrderPage, Order>(order);
+
+public class OrderViewModel : ShellInjectViewModel<Order>
+{
+    public override Task DataReceivedAsync(Order? order) { ... }
+}
+```
+
+The built-in approach works fine. ShellInject is for apps where the string keys, route registration, and BindingContext wiring get repetitive. It also keeps data sent forward separate from data returned by a page, and it passes data to popups and tabs the same way it does to pages.
 
 ## Requirements
 
-- A .NET MAUI Shell-based app.
-- .NET 10 target frameworks, matching this package version.
-- No separate `CommunityToolkit.Maui` package reference is required unless your app directly depends on toolkit APIs. ShellInject brings its required package dependencies transitively.
+- .NET 10 with the .NET MAUI workload
+- An app that uses `Shell` as its root page
 
-For normal Shell navigation without popups, setup is just:
-
-```csharp
-builder
-    .UseMauiApp<App>()
-    .UseShellInject();
-```
-
-If you use ShellInject popup APIs, register the MAUI Community Toolkit during startup:
-
-```csharp
-builder
-    .UseMauiApp<App>()
-    .UseMauiCommunityToolkit()
-    .UseShellInject();
-```
-
-If you do not use popups or other toolkit features, do not add `UseMauiCommunityToolkit()` just for ShellInject navigation.
+The package targets `net10.0`, Android, iOS, and Mac Catalyst.
 
 ## Installation
-
-Install the package from NuGet:
 
 ```bash
 dotnet add package ShellInject
 ```
 
-Then enable it in `MauiProgram.cs`:
+`CommunityToolkit.Maui` and `CommunityToolkit.Mvvm` come in as dependencies, so you don't need to add them yourself.
+
+## Getting started
+
+### 1. Register ShellInject
 
 ```csharp
 using ShellInject;
@@ -62,437 +95,344 @@ public static class MauiProgram
 
         builder
             .UseMauiApp<App>()
+            .UseMauiCommunityToolkit() // only needed if you use popups
             .UseShellInject();
+
+        builder.Services.AddSingleton<IOrderService, OrderService>();
 
         return builder.Build();
     }
 }
 ```
 
-That is the only required ShellInject setup for the default experience.
-
-## ViewModel Binding
-
-ShellInject supports two binding styles. You can use either one in the same app.
-
-### Option 1: Convention Binding
-
-Convention binding is enabled by default from `UseShellInject()`.
-
-```text
-MainPage       -> MainViewModel
-DetailsPage    -> DetailsViewModel
-SamplePage3    -> SamplePage3ViewModel
-SamplePopup    -> SamplePopupViewModel
-```
-
-For a page like this:
+Make sure your app's window uses a `Shell`:
 
 ```csharp
-namespace MyApp.Pages;
+protected override Window CreateWindow(IActivationState? activationState)
+    => new(new AppShell());
+```
 
-public partial class DetailsPage : ContentPage
+### 2. Create a page and a ViewModel
+
+```csharp
+public partial class OrderPage : ContentPage
 {
-    public DetailsPage()
+    public OrderPage() => InitializeComponent();
+}
+```
+
+```csharp
+public class OrderViewModel(IOrderService orders) : ShellInjectViewModel<Order>
+{
+    public override async Task DataReceivedAsync(Order? order)
     {
-        InitializeComponent();
+        // Called with the object passed to PushAsync
     }
 }
 ```
 
-ShellInject looks for a ViewModel named `DetailsViewModel`, then falls back to `DetailsPageViewModel`. If both exist, `DetailsViewModel` wins.
+`OrderPage` is bound to `OrderViewModel` automatically. Keep `x:DataType="vm:OrderViewModel"` in your XAML so you still get compiled bindings.
+
+### 3. Navigate
 
 ```csharp
-namespace MyApp.ViewModels;
-
-public class DetailsViewModel : ShellInjectViewModel
-{
-}
+await ShellNavigation.PushAsync<OrderPage, Order>(order);
 ```
 
-You should still use `x:DataType` in XAML for compiled bindings:
+## Binding pages to ViewModels
+
+There are three ways to connect a page (or popup) to its ViewModel. You can mix them in the same app.
+
+### Naming convention
+
+This is on by default. For a page named `OrderPage`, ShellInject looks for `OrderViewModel`, then `OrderPageViewModel`. It checks the matching `ViewModels` namespace first (`MyApp.Pages` becomes `MyApp.ViewModels`), then searches loaded assemblies. If two types share the name, nothing is bound.
+
+A page that already has a `BindingContext` is left alone.
+
+### XAML
+
+Use this when the names don't line up:
 
 ```xml
 <ContentPage
-    x:Class="MyApp.Pages.DetailsPage"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:inject="clr-namespace:ShellInject.Extensions;assembly=ShellInject"
     xmlns:vm="clr-namespace:MyApp.ViewModels"
-    x:DataType="vm:DetailsViewModel">
-
-    <Label Text="{Binding Title}" />
-</ContentPage>
+    x:Class="MyApp.Pages.OrderEditorPage"
+    x:DataType="vm:EditOrderViewModel"
+    inject:ShellInjectPageExtensions.ViewModelType="{x:Type vm:EditOrderViewModel}">
 ```
 
-Convention binding never replaces an existing `BindingContext`. If your app sets the binding manually, ShellInject leaves it alone.
+`ViewModelType` always wins, including over a `BindingContext` that was set earlier. It also works on a `ContentView`.
 
-### Option 2: Explicit XAML Binding
+### Registration
 
-If a page does not follow the naming convention, or if you want the mapping to be obvious in XAML, use the existing attached property:
-
-```xml
-<ContentPage
-    x:Class="MyApp.Pages.OrderDetailsPage"
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:extensions="clr-namespace:ShellInject.Extensions;assembly=ShellInject"
-    xmlns:vm="clr-namespace:MyApp.ViewModels"
-    extensions:ShellInjectPageExtensions.ViewModelType="{x:Type vm:OrderEditorViewModel}"
-    x:DataType="vm:OrderEditorViewModel">
-</ContentPage>
-```
-
-Explicit `ViewModelType` mappings take precedence over convention binding.
-
-### Configuring Convention Binding
-
-You can disable convention binding or customize suffixes at startup:
+Map types in code at startup:
 
 ```csharp
 builder.UseShellInject(options =>
 {
-    options.AutoBindViewModelsByConvention = true;
-    options.PageSuffix = "Page";
-    options.ViewModelSuffix = "ViewModel";
+    options.RegisterViewModel<OrderEditorPage, EditOrderViewModel>();
 });
 ```
 
-To keep only explicit XAML binding:
+Registrations are checked before the naming convention and skip the assembly search. They use the same automatic binding pipeline, so they only apply while `AutoBindViewModelsByConvention` is `true`.
+
+If you trim or publish with NativeAOT, registration or `ViewModelType` is safer than the naming convention, because the ViewModel type is referenced directly. Test your trimmed build on a device either way.
+
+### Options
+
+| Option | Default | Description |
+|---|---|---|
+| `AutoBindViewModelsByConvention` | `true` | Enables convention and registration binding. |
+| `PageSuffix` | `"Page"` | Suffix removed from the page name before looking for a ViewModel. |
+| `ViewModelSuffix` | `"ViewModel"` | Suffix added when looking for a ViewModel. |
+| `ErrorHandler` | `null` | Called with exceptions ShellInject catches and recovers from. See [Error handling](#error-handling). |
+
+## ViewModels
+
+Derive from `ShellInjectViewModel`, or from `ShellInjectViewModel<T>` if the page always receives the same type. Both derive from `ObservableObject`.
+
+| Method | When it runs |
+|---|---|
+| `InitializedAsync()` | Once per ViewModel instance, the first time its page appears |
+| `DataReceivedAsync(parameter)` | When data is passed to this page by a push, modal, tab change, replace, or popup |
+| `ReverseDataReceivedAsync(parameter)` | When a page or popup above this one returns data |
+| `OnAppearing()` | Every time the page appears |
+| `OnDisappearing()` | Every time the page disappears |
+| `OnAppearedAsync()` | After a ShellInject navigation to this page completes |
+
+Read navigation data in `DataReceivedAsync`, not `InitializedAsync`.
+
+### Typed ViewModels
+
+`ShellInjectViewModel<T>` adds overloads that take `T` instead of `object`:
 
 ```csharp
-builder.UseShellInject(options =>
+public class OrderViewModel : ShellInjectViewModel<Order>
 {
-    options.AutoBindViewModelsByConvention = false;
-});
-```
-
-## ViewModel Base Class
-
-Inherit from `ShellInjectViewModel` when you want lifecycle hooks and navigation data.
-
-```csharp
-using ShellInject;
-
-public class DetailsViewModel : ShellInjectViewModel
-{
-    public override Task InitializedAsync()
-    {
-        // Runs once for this ViewModel instance.
-        return Task.CompletedTask;
-    }
-
-    public override Task DataReceivedAsync(object? parameter)
-    {
-        // Runs when this page receives forward navigation data.
-        return Task.CompletedTask;
-    }
-
-    public override Task ReverseDataReceivedAsync(object? parameter)
-    {
-        // Runs when another page returns data to this ViewModel.
-        return Task.CompletedTask;
-    }
-
-    public override Task OnAppearedAsync()
-    {
-        // Runs after Shell navigation completes.
-        return Task.CompletedTask;
-    }
-
-    public override void OnAppearing()
-    {
-        // Runs when the page appears.
-    }
-
-    public override void OnDisAppearing()
-    {
-        // Runs when the page disappears.
-    }
+    public override Task DataReceivedAsync(Order? order) { ... }
+    public override Task ReverseDataReceivedAsync(Order? order) { ... }
 }
 ```
 
-The hooks are intentionally lightweight. Put page behavior in the ViewModel, keep code-behind focused on `InitializeComponent()`, and let ShellInject handle the navigation plumbing.
+The page type and the parameter type aren't checked against each other at compile time. If a value of the wrong type arrives, the typed method isn't called and an `InvalidCastException` is passed to `ErrorHandler`. If forward and reverse data are different types, use the non-generic base class and cast.
 
-## Dependency Injection
+## Dependency injection
 
-ShellInject uses the MAUI service provider configured in `MauiProgram.cs`.
-
-```csharp
-builder.Services.AddSingleton<IOrdersService, OrdersService>();
-builder.Services.AddTransient<DetailsViewModel>();
-```
-
-When a ViewModel is needed, ShellInject resolves it from DI if it is registered. If it is not registered, ShellInject uses `ActivatorUtilities`, so constructor injection still works when the dependencies are registered.
+ShellInject resolves ViewModels from the app's service provider. Registered ViewModels use their registered lifetime. ViewModels that aren't registered are created with `ActivatorUtilities`, so their constructor dependencies are still injected.
 
 ```csharp
-public class DetailsViewModel(IOrdersService ordersService) : ShellInjectViewModel
-{
-}
+builder.Services.AddSingleton<IOrderService, OrderService>();
+builder.Services.AddTransient<OrderViewModel>(); // optional
 ```
 
-If no service provider is available yet, ShellInject falls back to a parameterless constructor.
-
-You can also resolve services directly when needed:
+To resolve a service outside of constructor injection:
 
 ```csharp
-var required = Injector.GetRequiredService<IOrdersService>();
-var optional = Injector.GetService<IOrdersService>();
+var orders = Injector.GetRequiredService<IOrderService>();
+var logger = Injector.GetService<ILogger<App>>(); // null if not registered
 ```
 
-## Navigation API
+## Navigation
 
-Use `ShellNavigation` for new code. It defaults to `Shell.Current`, and every method also accepts an explicit `Shell` for multi-window or advanced scenarios.
+All methods live on the static `ShellNavigation` class. Each one takes an optional `shell` argument and uses `Shell.Current` when it's omitted. In multi-window apps, pass the window's Shell.
+
+### Push and return
 
 ```csharp
-await ShellNavigation.PushAsync<DetailsPage>(parameter: orderId);
-await ShellNavigation.PushAsync<DetailsPage>(shell: myShell, parameter: orderId);
+await ShellNavigation.PushAsync<OrderPage, Order>(order);
+await ShellNavigation.PushAsync<OrderPage>(parameter: order); // equivalent
 ```
 
-### Push a Page
+From the pushed page, return a result to the previous page:
 
 ```csharp
-await ShellNavigation.PushAsync<DetailsPage>(parameter: orderId);
+await ShellNavigation.PopAsync(parameter: result);
 ```
 
-ShellInject registers a route for `DetailsPage` automatically, navigates to it, binds the ViewModel, and calls `DataReceivedAsync(orderId)` on the destination ViewModel.
+The previous ViewModel receives `result` in `ReverseDataReceivedAsync`. `PopAsync` also works from a modal page. Using the system back button pops without sending data.
 
-### Return Data
+### Multi-page stacks
 
-```csharp
-await ShellNavigation.PopAsync(parameter: "Saved");
-```
-
-The previous page receives the value in `ReverseDataReceivedAsync`.
-
-```csharp
-public override Task ReverseDataReceivedAsync(object? parameter)
-{
-    StatusMessage = parameter as string ?? string.Empty;
-    return Task.CompletedTask;
-}
-```
-
-`PopAsync` works for regular Shell pages and modal pages. ShellInject detects the current navigation context and uses the correct pop operation.
-
-### Push Multiple Pages
+Build several pages in one call. Only the last page receives the parameter.
 
 ```csharp
 await ShellNavigation.PushMultiStackAsync(
-    pageTypes: [typeof(DetailsPage), typeof(StepTwoPage), typeof(StepThreePage)],
-    parameter: orderId);
+    pageTypes: [typeof(CartPage), typeof(CheckoutPage)],
+    parameter: cart);
 ```
 
-This builds a stack in one call. The final page receives the parameter after navigation completes.
-
-To close that regular Shell stack and return data to the root page, use:
+Return from anywhere in the stack:
 
 ```csharp
-await ShellNavigation.PopToRootAsync(parameter: "Finished");
+await ShellNavigation.PopToRootAsync(parameter: receipt);
+await ShellNavigation.PopToAsync<CartPage>(parameter: receipt);
+```
+
+### Sending data without navigating
+
+Deliver data to a page further down the stack while the current page stays open. The target receives it in `ReverseDataReceivedAsync`.
+
+```csharp
+await ShellNavigation.SendDataToPageAsync<OrdersPage>(data: updatedOrder);
 ```
 
 ### Modals
 
-Push a modal page by type:
-
 ```csharp
-await ShellNavigation.PushModalAsync<DetailsPage>(parameter: orderId);
+// A single modal page
+await ShellNavigation.PushModalAsync<OrderPage, Order>(order);
+
+// A modal with its own NavigationPage
+await ShellNavigation.PushModalWithNavigationAsync(page: new WizardStepOnePage(), parameter: draft);
 ```
 
-Or push a page instance inside a modal `NavigationPage`:
+`ShellNavigation.PushAsync` always pushes onto the Shell stack, even when a modal is showing. To move between pages inside a modal `NavigationPage`, use that page's `Navigation`:
 
 ```csharp
-await ShellNavigation.PushModalWithNavigationAsync(
-    page: new StepOnePage(),
-    parameter: orderId);
+var modal = (NavigationPage)Shell.Current.Navigation.ModalStack[^1];
+await modal.Navigation.PushAsync(new WizardStepTwoPage());
 ```
 
-Close the current modal page and return data:
+A native push like this still binds the ViewModel, but it doesn't deliver a parameter. `PopAsync` still returns data inside the modal. To close the whole modal stack and send data to the page underneath, use:
 
 ```csharp
-await ShellNavigation.PopAsync(parameter: "Saved from modal");
+await ShellNavigation.PopModalStackAsync(data: draft);
 ```
 
-Close the entire modal navigation stack:
+### Tabs
 
 ```csharp
-await ShellNavigation.PopModalStackAsync(data: "Closed modal stack");
+await ShellNavigation.ChangeTabAsync(tabIndex: 1, parameter: filter);
+await ShellNavigation.ChangeTabAsync<OrdersPage>(parameter: filter);
 ```
 
-Use `PopModalStackAsync` only for modal navigation stacks. For regular Shell stacks, use `PopToRootAsync`, `PopToAsync`, or `PopAsync`.
+The generic version selects the tab whose page is already an `OrdersPage`. It doesn't create pages from `ContentTemplate` to look for a match, so declare the page directly in `AppShell.xaml` if you select it by type. If no tab matches, it falls back to `tabIndex`. By default the current stack is popped to root first. Pass `popToRootFirst: false` to keep it.
 
-### Pop to a Specific Page
+### Flyout items
+
+Switch to a page that's already part of the Shell hierarchy:
 
 ```csharp
-await ShellNavigation.PopToAsync<MainPage>(parameter: "Back to main");
+await ShellNavigation.ReplaceAsync<ReportsPage>(parameter: dateRange);
 ```
 
-ShellInject searches the navigation stack for the target page type and delivers the value through `ReverseDataReceivedAsync`.
+The `ShellContent` route must match the page class name:
 
-### Send Data to a Page Already on the Stack
-
-```csharp
-await ShellNavigation.SendDataToPageAsync<MainPage>(data: "Refresh now");
+```xml
+<FlyoutItem Title="Reports">
+    <ShellContent Route="ReportsPage" ContentTemplate="{DataTemplate pages:ReportsPage}" />
+</FlyoutItem>
 ```
 
-This is useful when a page should receive data without making it the result of a pop operation.
-
-### Replace Flyout Content
-
-```csharp
-await ShellNavigation.ReplaceAsync<OrdersPage>(parameter: filter);
-```
-
-`ReplaceAsync` is intended for pages already present in the Shell visual hierarchy, such as Flyout items. It navigates by the target page type name and delivers data after the replacement.
-
-### Change Tabs
-
-```csharp
-await ShellNavigation.ChangeTabAsync(
-    tabIndex: 1,
-    parameter: "Selected tab two");
-```
-
-ShellInject can select a tab in the current Shell section or locate a matching tab section elsewhere in the Shell hierarchy, then deliver data to the selected tab ViewModel.
+The destination receives the data in `DataReceivedAsync`, even when you're switching back to a page you came from.
 
 ### Popups
 
-Popup support uses `CommunityToolkit.Maui`. ShellInject already declares the NuGet dependency, but popup support still requires toolkit startup registration:
+Popups need `UseMauiCommunityToolkit()` at startup. They're bound to ViewModels the same way pages are.
 
 ```csharp
-builder.UseMauiCommunityToolkit();
+await ShellNavigation.ShowPopupAsync<ConfirmPopup>(data: order);
 ```
+
+From the popup's ViewModel:
 
 ```csharp
-await ShellNavigation.ShowPopupAsync<OrderPopup>(data: orderId);
+await ShellNavigation.DismissPopupAsync<ConfirmPopup>(data: true); // result goes to the page's ReverseDataReceivedAsync
+await ShellNavigation.DismissPopupAsync<ConfirmPopup>();           // closes without sending anything
 ```
 
-The popup ViewModel receives the value in `DataReceivedAsync`.
+In multi-window apps, pass the same `shell` to both calls.
+
+### API summary
+
+| Method | Delivers data to |
+|---|---|
+| `PushAsync<TPage>` / `PushAsync<TPage, TParameter>` | New page, `DataReceivedAsync` |
+| `PushModalAsync<TPage>` / `PushModalAsync<TPage, TParameter>` | Modal page, `DataReceivedAsync` |
+| `PushModalWithNavigationAsync` | Modal root page, `DataReceivedAsync` |
+| `PushMultiStackAsync` | Last page in the stack, `DataReceivedAsync` |
+| `PopAsync` | Previous page, `ReverseDataReceivedAsync` |
+| `PopToAsync<TPage>` | Matching page on the Shell stack, `ReverseDataReceivedAsync` |
+| `PopToRootAsync` | Root page, `ReverseDataReceivedAsync` |
+| `PopModalStackAsync` | Page under the modal, `ReverseDataReceivedAsync` |
+| `SendDataToPageAsync<TPage>` | Matching page on the Shell stack, `ReverseDataReceivedAsync` |
+| `ChangeTabAsync` / `ChangeTabAsync<TPage>` | Selected tab, `DataReceivedAsync` |
+| `ReplaceAsync<TPage>` | Destination page, `DataReceivedAsync` |
+| `ShowPopupAsync<TPopup>` | Popup, `DataReceivedAsync` |
+| `DismissPopupAsync<TPopup>` | Current page, `ReverseDataReceivedAsync` |
+
+## Error handling
+
+Navigation methods throw as usual, so wrap calls in `try`/`catch` where you need to. Some failures happen outside a call you can catch, such as a ViewModel constructor throwing during binding or an exception in a lifecycle method. ShellInject catches those so the app keeps running. To see them:
 
 ```csharp
-await ShellNavigation.DismissPopupAsync<OrderPopup>(data: "Popup closed");
+builder.UseShellInject(options =>
+{
+    options.ErrorHandler = ex => System.Diagnostics.Debug.WriteLine(ex);
+});
 ```
 
-The current page receives the returned value in `ReverseDataReceivedAsync`.
+A page with no matching ViewModel isn't treated as an error.
 
-## API Reference
+## Upgrading from 10.0
 
-Common `ShellNavigation` methods:
+10.1 doesn't break existing code. Package validation checks the public API against 10.0.3.
+
+**Shell extension methods are obsolete.** Calls like `Shell.Current.PushAsync<OrderPage>(order)` still compile and behave the same, but now produce a warning. Replace them with the matching `ShellNavigation` method:
 
 ```csharp
-ShellNavigation.PushAsync<TPageType>(shell, parameter, animate);
-ShellNavigation.PushMultiStackAsync(shell, pageTypes, parameter, animate, animateAllPages);
-ShellNavigation.PushModalAsync<TPageType>(shell, parameter, animate);
-ShellNavigation.PushModalWithNavigationAsync(shell, page, parameter, animate);
-ShellNavigation.PopAsync(shell, parameter, animate);
-ShellNavigation.PopModalStackAsync(shell, data, animate);
-ShellNavigation.PopToAsync<TPageType>(shell, parameter);
-ShellNavigation.PopToRootAsync(shell, parameter, animate);
-ShellNavigation.ChangeTabAsync(shell, tabIndex, parameter, popToRootFirst);
-ShellNavigation.ReplaceAsync<TPageType>(shell, parameter, animate);
-ShellNavigation.SendDataToPageAsync<TPageType>(shell, data);
-ShellNavigation.ShowPopupAsync<TPopup>(shell, data, onError);
-ShellNavigation.DismissPopupAsync<TPopup>(shell, data);
+// Before
+await Shell.Current.PushAsync<OrderPage>(order);
+
+// After
+await ShellNavigation.PushAsync<OrderPage>(parameter: order);
 ```
 
-All `shell` parameters are optional. If omitted, ShellInject uses `Shell.Current`.
+**`OnDisAppearing` is now `OnDisappearing`.** Existing `OnDisAppearing` overrides still work and don't produce warnings. Override one or the other, not both.
 
-## Backwards Compatibility
+New in 10.1:
 
-Earlier versions exposed navigation primarily as extension methods on `Shell`:
-
-```csharp
-await Shell.Current.PushAsync<DetailsPage>(parameter);
-await Shell.Current.PopAsync(parameter);
-await Shell.Current.ShowPopupAsync<OrderPopup>(data);
-```
-
-Those methods are still available. They have not been removed. They are marked `[Obsolete]` with `false`, which means existing apps get compiler warnings but do not fail to build.
-
-New code should use `ShellNavigation`:
-
-```csharp
-await ShellNavigation.PushAsync<DetailsPage>(parameter: parameter);
-```
-
-The old methods forward into the new implementation, so existing apps receive the same routing, binding, lifecycle, modal, tab, and popup fixes while they migrate at their own pace.
-
-## Practical Notes
-
-- `UseShellInject()` should be called during MAUI startup before the app is built.
-- ShellInject is designed for Shell-based apps. If your app does not use `Shell`, pass an explicit `Shell` is not enough; the app still needs a Shell navigation structure.
-- Convention binding is convenient, but explicit XAML `ViewModelType` is the right choice for unusual page/ViewModel names.
-- Keep `x:DataType` even when ShellInject sets `BindingContext`; it gives you compiled binding checks and better performance.
-- If two pages share the same class name in different namespaces, ShellInject falls back to namespace-qualified generated routes.
-- Missing convention matches are ignored. ShellInject does not throw just because a page has no matching ViewModel.
+- `ShellInjectViewModel<T>` with typed data methods
+- `PushAsync<TPage, TParameter>` and `PushModalAsync<TPage, TParameter>`
+- `options.RegisterViewModel<TView, TViewModel>()`
+- `options.ErrorHandler`
+- `ChangeTabAsync<TPage>`
+- Cached convention lookups
+- Popup tracking per Shell, for multi-window apps
+- `SendDataToPageAsync` matches the exact page type first, then falls back to the class name as before
 
 ## Troubleshooting
 
-### Shell not found
+**"An error occurred trying to navigate with Shell navigation"**
+`Shell.Current` was null. Make sure the window's root page is a `Shell`, or pass `shell:` explicitly.
 
-If you see an `InvalidOperationException` saying Shell could not be found, make sure your app creates a `Shell` root page:
+**The ViewModel isn't bound**
+Check that the names match (`OrderPage` to `OrderViewModel` or `OrderPageViewModel`) and that only one type has that name. Also check that nothing sets `BindingContext` first, including XAML such as `<ContentPage.BindingContext>`. To see why a ViewModel couldn't be created, set `ErrorHandler`.
 
-```csharp
-protected override Window CreateWindow(IActivationState? activationState)
-{
-    return new Window(new AppShell());
-}
-```
+**`DataReceivedAsync` isn't called**
+The ViewModel must derive from `ShellInjectViewModel` or implement `IShellInjectShellViewModel`. For typed ViewModels, check `ErrorHandler` for a type mismatch.
 
-For multi-window apps, pass the correct Shell instance directly:
+**`ChangeTabAsync<TPage>` selects the wrong tab**
+The target page probably isn't created yet. Declare it directly inside `ShellContent` instead of using `ContentTemplate`.
 
-```csharp
-await ShellNavigation.PushAsync<DetailsPage>(shell: myShell, parameter: data);
-```
+**`PopToRootAsync` doesn't close my modal**
+It only works on the Shell stack. Use `PopModalStackAsync` for modals.
 
-### ViewModel is not binding
+## Sample app
 
-Check the page and ViewModel names first:
+The [`Sample`](https://github.com/scryptfyre/ShellInject/tree/main/Sample) folder contains a MAUI app that walks through every workflow above. It includes an in-app setup guide and a live log of each navigation call and lifecycle callback. See the [sample README](https://github.com/scryptfyre/ShellInject/blob/main/Sample/README.md) for details.
 
-```text
-DetailsPage -> DetailsViewModel
-DetailsPage -> DetailsPageViewModel
-```
-
-If the names do not match, use the XAML `ViewModelType` override. Also check that an existing `BindingContext` is not already set, because convention binding will not replace it.
-
-### Trimmed or NativeAOT builds
-
-Convention binding discovers ViewModels by type name at runtime. If your release build uses aggressive trimming or NativeAOT, make sure your ViewModel types and constructors are preserved, or use the explicit XAML `ViewModelType` binding for those pages. Explicit `ViewModelType` references give the linker a stronger static reference than convention-only discovery.
-
-### Data is not received
-
-Make sure the ViewModel inherits from `ShellInjectViewModel` or implements `IShellInjectShellViewModel`. Forward navigation data is delivered to `DataReceivedAsync`; returned data is delivered to `ReverseDataReceivedAsync`.
-
-### Modal stack does not close
-
-Use `PopModalStackAsync` for modal navigation stacks created with `PushModalWithNavigationAsync`. Use `PopToRootAsync`, `PopToAsync`, or `PopAsync` for normal Shell stacks.
-
-## Sample Project
-
-The repository includes a sample MAUI app that demonstrates:
-
-- Convention ViewModel binding.
-- Explicit XAML `ViewModelType` binding.
-- Constructor injection into ViewModels.
-- Push navigation and returned data.
-- Modal pages and modal navigation stacks.
-- Multi-page Shell stacks.
-- Popup data flow.
-- Tab selection and flyout replacement.
-- Backwards-compatible APIs through deprecated Shell extension methods.
-
-## Build and Test
-
-Useful commands for contributors:
+## Building from source
 
 ```bash
 dotnet build ShellInject/ShellInject.csproj -c Release
-dotnet test ShellInjectTests/ShellInjectTests.csproj -c Release
-dotnet build Sample/Sample.csproj -c Debug -f net10.0-android
+dotnet test ShellInjectTests/ShellInjectTests.csproj
+dotnet build Sample/Sample.csproj -f net10.0-android
 ```
 
-Coverage can be collected with:
+## License
 
-```bash
-dotnet test ShellInjectTests/ShellInjectTests.csproj -c Release --collect:"XPlat Code Coverage"
-```
+[Apache 2.0](https://github.com/scryptfyre/ShellInject/blob/main/LICENSE)

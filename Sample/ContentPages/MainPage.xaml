@@ -1,122 +1,108 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:Sample.ViewModels"
-             x:DataType="vm:MainViewModel"
-             Title="Examples"
-             BackgroundColor="#F7F8FC"
-             x:Class="Sample.ContentPages.MainPage">
-    <ScrollView>
-        <VerticalStackLayout
-            Spacing="16"
-            Padding="20,24,20,32">
-
-            <Border
-                BackgroundColor="#1F2937"
-                StrokeThickness="0"
-                StrokeShape="RoundRectangle 24"
-                Padding="24">
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Sample.ViewModels" x:DataType="vm:MainViewModel" x:Class="Sample.ContentPages.MainPage" Title="Navigation lab">
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Setup" Command="{Binding OpenGuideCommand}" />
+        <ToolbarItem Text="Activity" Command="{Binding OpenActivityCommand}" />
+    </ContentPage.ToolbarItems>
+    <ScrollView x:Name="DemoScroll">
+        <VerticalStackLayout Style="{StaticResource PageContent}">
+            <Border Style="{StaticResource Card}" BackgroundColor="{StaticResource Navy}" StrokeThickness="0">
                 <VerticalStackLayout Spacing="12">
-                    <Label
-                        Text="ShellInject"
-                        TextColor="White"
-                        FontSize="30"
-                        FontAttributes="Bold" />
-                    <Label
-                        Text="A small catalog of navigation, ViewModel injection, lifecycle hooks, and data passing examples."
-                        TextColor="#D1D5DB"
-                        FontSize="15" />
-                    <Label
-                        Text="UseShellInject() wires pages to ViewModels by convention, with ViewModelType available for overrides."
-                        TextColor="#A7F3D0"
-                        FontSize="13" />
+                    <Grid ColumnDefinitions="*,48">
+                        <Label Text="SHELLINJECT / SAMPLE" Style="{StaticResource Eyebrow}" TextColor="{StaticResource AccentDark}" VerticalOptions="Center" />
+                        <Image Grid.Column="1" Source="lab_mark.png" HeightRequest="40" WidthRequest="40" SemanticProperties.Description="ShellInject navigation lab" />
+                    </Grid>
+                    <Label Text="Good navigation.&#10;Less plumbing." Style="{StaticResource PageTitle}" TextColor="White" />
+                    <Label Text="Send a request. Follow the workflow. See exactly what comes back." TextColor="{StaticResource HeroText}" />
+                    <Label Text=".NET MAUI 10   ·   MVVM   ·   ShellInject 10.1" Style="{StaticResource Caption}" TextColor="{StaticResource HeroText}" />
+                    <Button Text="Start a typed request" Command="{Binding OpenDetailsCommand}" IsEnabled="{Binding CanInteract}"
+                            BackgroundColor="{StaticResource AccentDark}" TextColor="{StaticResource Ink}" AutomationId="QuickStart" />
                 </VerticalStackLayout>
             </Border>
 
-            <Border
-                BackgroundColor="White"
-                Stroke="#E5E7EB"
-                StrokeShape="RoundRectangle 18"
-                Padding="18">
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="01 / CHOOSE YOUR PAYLOAD" Style="{StaticResource Eyebrow}" />
+                    <Label Text="Make the data yours" Style="{StaticResource Heading}" />
+                    <Label Text="Use a shipment reference to follow the same value through every example." Style="{StaticResource BodyMuted}" />
+                    <Entry Text="{Binding Session.Reference}" MaxLength="40" Placeholder="Shipment reference" ReturnType="Done" SemanticProperties.Description="Shipment reference sent to navigation examples" AutomationId="PayloadEntry" />
+                    <Label Text="Blank input uses SHIP-2048. Everything runs locally." Style="{StaticResource Caption}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border x:Name="ResultPanel" Style="{StaticResource ResultCard}" AutomationId="ResultInbox">
                 <VerticalStackLayout Spacing="8">
-                    <Label
-                        Text="Latest return data"
-                        TextColor="#6B7280"
-                        FontSize="12"
-                        FontAttributes="Bold" />
-                    <Label
-                        Text="{Binding ReverseDataText}"
-                        TextColor="#111827"
-                        FontSize="16" />
-                    <Label
-                        Text="{Binding LifecycleText}"
-                        TextColor="#6B7280"
-                        FontSize="12" />
+                    <Label Text="RESULT INBOX" Style="{StaticResource Eyebrow}" />
+                    <Label Text="{Binding Session.LatestResult}" FontFamily="OpenSansSemibold" />
+                    <Label Text="{Binding Session.ResultSource}" Style="{StaticResource Caption}" />
                 </VerticalStackLayout>
             </Border>
+            <Label Text="{Binding ErrorMessage}" Style="{StaticResource Error}" />
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" />
 
-            <Label
-                Text="Examples"
-                TextColor="#111827"
-                FontSize="22"
-                FontAttributes="Bold"
-                Margin="0,8,0,0" />
+            <VerticalStackLayout Spacing="8">
+                <Label Text="02 / EXPLORE A WORKFLOW" Style="{StaticResource Eyebrow}" />
+                <Label Text="Learn by doing" Style="{StaticResource Heading}" />
+                <Label Text="Start with a page push, then explore the different navigation contexts." Style="{StaticResource BodyMuted}" />
+            </VerticalStackLayout>
 
-            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 18" Padding="18">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Push page + parameters" TextColor="#111827" FontSize="17" FontAttributes="Bold" />
-                    <Label Text="Calls ShellNavigation.PushAsync&lt;DetailsPage&gt; and handles DataReceivedAsync in the destination ViewModel." TextColor="#6B7280" />
-                    <Button Text="Open details page" Command="{Binding ShowDetailsCommand}" />
+            <VerticalStackLayout Spacing="16" IsEnabled="{Binding CanInteract}">
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="START HERE · FORWARD + REVERSE DATA" Style="{StaticResource Eyebrow}" />
+                        <Label Text="A request that comes full circle" Style="{StaticResource Heading}" />
+                        <Label Text="Send a typed DemoRequest, edit a reply, and return a DemoResult to this inbox." Style="{StaticResource BodyMuted}" />
+                        <Border Style="{StaticResource CodeCard}"><Label Text="PushAsync&lt;DetailsPage, DemoRequest&gt;(request)&#10;→ DataReceivedAsync(DemoRequest)&#10;→ PopAsync(parameter: result)" Style="{StaticResource Code}" /></Border>
+                        <Button Text="Try a page push" Command="{Binding OpenDetailsCommand}" AutomationId="OpenPush" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="PRESENTATION · SAME DATA CONTRACT" Style="{StaticResource Eyebrow}" />
+                        <Label Text="Give a task its own space" Style="{StaticResource Heading}" />
+                        <Label Text="Open the same details screen as a modal. PopAsync closes the modal and returns its reply." Style="{StaticResource BodyMuted}" />
+                        <Label Text="PushModalAsync&lt;DetailsPage, DemoRequest&gt;" Style="{StaticResource Code}" />
+                        <Button Text="Try a modal" Style="{StaticResource SecondaryButton}" Command="{Binding OpenModalCommand}" AutomationId="OpenModal" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="QUICK DECISIONS · COMMUNITY TOOLKIT" Style="{StaticResource Eyebrow}" />
+                        <Label Text="Confirm without leaving" Style="{StaticResource Heading}" />
+                        <Label Text="Pass data to a popup, then confirm with a result or cancel without sending one." Style="{StaticResource BodyMuted}" />
+                        <Label Text="ShowPopupAsync → DismissPopupAsync" Style="{StaticResource Code}" />
+                        <Button Text="Try a confirmation popup" Style="{StaticResource SecondaryButton}" Command="{Binding OpenPopupCommand}" AutomationId="OpenPopup" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="STACKS · TWO DIFFERENT CONTEXTS" Style="{StaticResource Eyebrow}" />
+                        <Label Text="Build a multi-step journey" Style="{StaticResource Heading}" />
+                        <Label Text="Shell stack: only the final page receives the initial payload. Pop one step, pop to a type, or return to root." Style="{StaticResource BodyMuted}" />
+                        <Button Text="Try a Shell stack" Style="{StaticResource SecondaryButton}" Command="{Binding OpenStackCommand}" AutomationId="OpenShellStack" />
+                        <Label Text="Modal stack: navigate inside a modal NavigationPage, then close that whole stack with a result." Style="{StaticResource BodyMuted}" />
+                        <Button Text="Try a modal stack" Style="{StaticResource SecondaryButton}" Command="{Binding OpenModalStackCommand}" AutomationId="OpenModalStack" />
+                    </VerticalStackLayout>
+                </Border>
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="12">
+                        <Label Text="SHELL DESTINATIONS · TABS + FLYOUT" Style="{StaticResource Eyebrow}" />
+                        <Label Text="Move between workspaces" Style="{StaticResource Heading}" />
+                        <Label Text="Select a tab by index or materialized page type. Replace a flyout destination without pushing a new page." Style="{StaticResource BodyMuted}" />
+                        <Button Text="Send to the Inbox tab" Style="{StaticResource SecondaryButton}" Command="{Binding OpenTabsCommand}" AutomationId="OpenTabs" />
+                        <Button Text="Replace with Dispatch" Style="{StaticResource SecondaryButton}" Command="{Binding ReplaceContentCommand}" AutomationId="OpenReplace" />
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+
+            <Border Style="{StaticResource CodeCard}">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="WIRED UP, NOT HARD-CODED" Style="{StaticResource Eyebrow}" />
+                    <Label Text="{Binding ServiceMessage}" Style="{StaticResource Caption}" />
+                    <Label Text="Inspect MainViewModel.cs for the actual calls. Open Activity to see the real callback sequence." Style="{StaticResource Caption}" />
                 </VerticalStackLayout>
             </Border>
-
-            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 18" Padding="18">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Modal page" TextColor="#111827" FontSize="17" FontAttributes="Bold" />
-                    <Label Text="Pushes a registered page modally and passes data into its ViewModel." TextColor="#6B7280" />
-                    <Button Text="Open details as modal" Command="{Binding PushModalCommand}" />
-                </VerticalStackLayout>
-            </Border>
-
-            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 18" Padding="18">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Popup + return data" TextColor="#111827" FontSize="17" FontAttributes="Bold" />
-                    <Label Text="Shows a CommunityToolkit popup with ViewModel injection, then dismisses it with data." TextColor="#6B7280" />
-                    <Button Text="Show popup" Command="{Binding ShowPopupCommand}" />
-                </VerticalStackLayout>
-            </Border>
-
-            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 18" Padding="18">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Modal navigation stack" TextColor="#111827" FontSize="17" FontAttributes="Bold" />
-                    <Label Text="Opens a NavigationPage modal and closes the whole modal stack with PopModalStackAsync." TextColor="#6B7280" />
-                    <Button Text="Open modal stack" Command="{Binding NavigateTestCommand}" />
-                </VerticalStackLayout>
-            </Border>
-
-            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 18" Padding="18">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Multi-page stack" TextColor="#111827" FontSize="17" FontAttributes="Bold" />
-                    <Label Text="Pushes multiple pages in one call with the same initial parameter." TextColor="#6B7280" />
-                    <Button Text="Push Details > Step 2 > Step 3" Command="{Binding PushMultiStackCommand}" />
-                </VerticalStackLayout>
-            </Border>
-
-            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 18" Padding="18">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Tabs and flyout" TextColor="#111827" FontSize="17" FontAttributes="Bold" />
-                    <Label Text="ChangeTabAsync sends data to a tab. ReplaceAsync swaps Shell content and passes data to the replacement page." TextColor="#6B7280" />
-                    <Button Text="Switch to tab two" Command="{Binding ChangeTabCommand}" />
-                    <Button Text="Replace flyout content" Command="{Binding ReplaceContentCommand}" />
-                </VerticalStackLayout>
-            </Border>
-
-            <Label
-                Text="All examples use ShellNavigation static methods. The older Shell extension methods remain available but are deprecated."
-                TextColor="#6B7280"
-                FontSize="12"
-                HorizontalTextAlignment="Center"
-                Margin="8,8" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

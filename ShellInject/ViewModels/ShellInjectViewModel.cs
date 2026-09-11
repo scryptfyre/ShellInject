@@ -72,8 +72,15 @@ public partial class ShellInjectViewModel : ObservableObject, IShellInjectShellV
 
     /// <summary>
     /// Executes when the view associated with the view model is disappearing from the screen.
+    /// The base implementation forwards to <see cref="OnDisappearing"/> so either name can be overridden.
     /// </summary>
-    public virtual void OnDisAppearing() { }
+    public virtual void OnDisAppearing() => OnDisappearing();
+
+    /// <summary>
+    /// Executes when the view associated with the view model is disappearing from the screen.
+    /// Preferred spelling of <see cref="OnDisAppearing"/> for new code; both are invoked through the same pipeline.
+    /// </summary>
+    public virtual void OnDisappearing() { }
 
     /// <summary>
     /// Executes asynchronous actions when the associated view or page has fully appeared in the UI.

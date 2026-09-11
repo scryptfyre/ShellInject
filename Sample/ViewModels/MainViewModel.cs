@@ -1,119 +1,62 @@
-using System.Diagnostics;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sample.ContentPages;
+using Sample.Models;
 using Sample.Services;
 using ShellInject;
 
 namespace Sample.ViewModels;
 
-public partial class MainViewModel(ISampleService sampleService) : BaseViewModel
+public partial class MainViewModel(DemoSession session, ISampleService sampleService) : BaseViewModel(session)
 {
-    private readonly ISampleService _sampleService = sampleService;
-
-    [ObservableProperty] private string _reverseDataText = "Nothing returned yet. Try an example below.";
-    [ObservableProperty] private string _lifecycleText = "Waiting for initialization...";
-
-    public override void OnAppearing()
-    {
-        base.OnAppearing();
-    }
-
-    public override void OnDisAppearing()
-    {
-        base.OnDisAppearing();
-    }
-
-    public override Task OnAppearedAsync()
-    {
-        LifecycleText = "OnAppearedAsync ran after the page appeared.";
-        return base.OnAppearedAsync();
-    }
-
-    public override Task InitializedAsync()
-    {
-        Debug.WriteLine($"SampleService: {_sampleService.GetMessage()}");
-        LifecycleText = $"InitializedAsync resolved ISampleService: {_sampleService.GetMessage()}";
-        return Task.CompletedTask;
-    }
+    public string ServiceMessage { get; } = sampleService.GetMessage();
 
     public override Task ReverseDataReceivedAsync(object? parameter)
     {
-        if (parameter is string text)
-        {
-            ReverseDataText = text;
-        }
+        Session.Receive("ReverseDataReceivedAsync", parameter);
         return Task.CompletedTask;
     }
 
     public override Task DataReceivedAsync(object? parameter)
     {
-        if (parameter is string text)
-        {
-            ReverseDataText = text;
-        }
-
-        Debug.WriteLine($"DataReceivedAsync: {parameter}");
+        Session.Receive("DataReceivedAsync · Shell replacement", parameter);
         return Task.CompletedTask;
     }
 
     [RelayCommand]
-    private Task OnShowDetailsAsync()
-    {
-        ResetResult();
-        return ShellNavigation.PushAsync<DetailsPage>(parameter: "PushAsync parameter from the examples page.");
-    }
-    
-    [RelayCommand]
-    private Task OnPushModalAsync()
-    {
-        ResetResult();
-        return ShellNavigation.PushModalAsync<DetailsPage>(parameter: "PushModalAsync parameter from the examples page.");
-    }
-    
-    [RelayCommand]
-    private async Task OnShowPopupAsync()
-    {
-        ResetResult();
-        await ShellNavigation.ShowPopupAsync<SamplePopup>(data: "This popup received data through DataReceivedAsync.");
-    }
-    
-    [RelayCommand]
-    private Task OnNavigateTestAsync()
-    {
-        ResetResult();
-        return ShellNavigation.PushModalWithNavigationAsync(
-            page: new SamplePage2(),
-            parameter: "Modal NavigationPage root parameter.");
-    }
+    private Task OpenDetailsAsync() => RunAsync("PushAsync<DetailsPage, DemoRequest>", () =>
+        ShellNavigation.PushAsync<DetailsPage, DemoRequest>(new DemoRequest(Session.ValidReference, "Opened from the navigation lab")));
 
     [RelayCommand]
-    private async Task ReplaceContent()
-    {
-        ResetResult();
-        await ShellNavigation.ReplaceAsync<FlyoutPageThree>(parameter: "ReplaceAsync swapped the Shell content and delivered this parameter.");
-    }
+    private Task OpenModalAsync() => RunAsync("PushModalAsync<DetailsPage, DemoRequest>", () =>
+        ShellNavigation.PushModalAsync<DetailsPage, DemoRequest>(new DemoRequest(Session.ValidReference, "Opened as a standalone modal", IsModal: true)));
 
     [RelayCommand]
-    private Task OnChangeTabAsync()
+    private Task OpenPopupAsync() => RunAsync("ShowPopupAsync<SamplePopup>", async () =>
     {
-        ResetResult();
-        return ShellNavigation.ChangeTabAsync(
-            tabIndex: 1,
-            parameter: "ChangeTabAsync selected tab two and delivered this parameter.");
-    }
+        await ShellNavigation.ShowPopupAsync<SamplePopup>(data: Session.ValidReference,
+            onError: ex => Session.Record("Popup", "Error", ex.Message));
+        Session.Record("Popup", "Closed", "If dismissed outside the popup, no return payload is sent.");
+    });
 
     [RelayCommand]
-    private Task OnPushMultiStackAsync()
-    {
-        ResetResult();
-        return ShellNavigation.PushMultiStackAsync(
-            pageTypes: [typeof(DetailsPage), typeof(SamplePage2), typeof(SamplePage3)],
-            parameter: "PushMultiStackAsync delivered this parameter to the stack.");
-    }
+    private Task OpenModalStackAsync() => RunAsync("PushModalWithNavigationAsync", () =>
+        ShellNavigation.PushModalWithNavigationAsync(page: new ModalStackPage(), parameter: Session.ValidReference));
 
-    private void ResetResult()
-    {
-        ReverseDataText = "Waiting for data to come back...";
-    }
+    [RelayCommand]
+    private Task OpenStackAsync() => RunAsync("PushMultiStackAsync", () =>
+        ShellNavigation.PushMultiStackAsync(pageTypes: [typeof(SamplePage2), typeof(SamplePage3)], parameter: Session.ValidReference));
+
+    [RelayCommand]
+    private Task OpenTabsAsync() => RunAsync("ChangeTabAsync · index 1", () =>
+        ShellNavigation.ChangeTabAsync(tabIndex: 1, parameter: Session.ValidReference));
+
+    [RelayCommand]
+    private Task ReplaceContentAsync() => RunAsync("ReplaceAsync<FlyoutPageThree>", () =>
+        ShellNavigation.ReplaceAsync<FlyoutPageThree>(parameter: Session.ValidReference));
+
+    [RelayCommand]
+    private Task OpenGuideAsync() => RunAsync("Open setup guide", () => ShellNavigation.PushAsync<GuidePage>());
+
+    [RelayCommand]
+    private Task OpenActivityAsync() => RunAsync("Open activity", () => ShellNavigation.PushAsync<ActivityPage>());
 }

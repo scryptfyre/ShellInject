@@ -1,23 +1,27 @@
-<?xml version="1.0" encoding="utf-8"?>
-
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:Sample.ViewModels"
-             x:DataType="vm:SamplePage3ViewModel"
-             Title="Modal Step 2"
-             BackgroundColor="#F7F8FC"
-             x:Class="Sample.ContentPages.SamplePage3">
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Sample.ViewModels" x:Class="Sample.ContentPages.SamplePage3" x:DataType="vm:SamplePage3ViewModel" Title="Review · Shell stack">
     <ScrollView>
-        <VerticalStackLayout Spacing="16" Padding="20,24,20,32">
-            <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 20" Padding="20">
-                <VerticalStackLayout Spacing="10">
-                    <Label Text="Stack page" TextColor="#111827" FontSize="24" FontAttributes="Bold" />
-                    <Label Text="This page demonstrates normal push navigation inside the modal stack." TextColor="#6B7280" />
-                    <Label Text="{Binding DataReceivedText}" TextColor="#111827" FontSize="16" />
-                </VerticalStackLayout>
-            </Border>
-            <Button Command="{Binding PushCommand}" Text="Push SamplePage2 again" />
-            <Button Command="{Binding CloseCommand}" Text="Close stack with data" />
+        <VerticalStackLayout Style="{StaticResource PageContent}">
+            <Label Text="LAB → PREPARE → REVIEW" Style="{StaticResource Eyebrow}" />
+            <Label Text="One call. Two pages." Style="{StaticResource PageTitle}" />
+            <Label Text="You are on the final page of the regular Shell stack. Choose a return path to see which page receives the result." Style="{StaticResource BodyMuted}" />
+            <Border Style="{StaticResource ResultCard}"><VerticalStackLayout Spacing="12">
+                <Label Text="DELIVERED TO THE FINAL PAGE ONLY" Style="{StaticResource Eyebrow}" />
+                <Label Text="{Binding DataReceivedText}" Style="{StaticResource Heading}" />
+            </VerticalStackLayout></Border>
+            <Border Style="{StaticResource CodeCard}"><Label Text="PushMultiStackAsync(&#10;  pageTypes: [typeof(SamplePage2),&#10;              typeof(SamplePage3)],&#10;  parameter: reference);" Style="{StaticResource Code}" /></Border>
+            <Border Style="{StaticResource Card}"><VerticalStackLayout Spacing="16" IsEnabled="{Binding CanInteract}">
+                <Label Text="Choose your return path" Style="{StaticResource Heading}" />
+                <Button Text="Finish · return to root" Command="{Binding FinishCommand}" AutomationId="StackFinish" />
+                <Label Text="PopToRootAsync → clears this Shell stack and returns data to the lab." Style="{StaticResource Caption}" />
+                <Button Text="Back one step · send to Prepare" Command="{Binding BackOneCommand}" Style="{StaticResource SecondaryButton}" />
+                <Label Text="PopAsync → Prepare receives ReverseDataReceivedAsync." Style="{StaticResource Caption}" />
+                <Button Text="Return to MainPage by type" Command="{Binding PopToLabCommand}" Style="{StaticResource SecondaryButton}" />
+                <Label Text="PopToAsync&lt;MainPage&gt; → finds that page on this stack." Style="{StaticResource Caption}" />
+            </VerticalStackLayout></Border>
+            <Label Text="{Binding ErrorMessage}" Style="{StaticResource Error}" />
+            <Label Text="SOURCE / MainViewModel.cs + SamplePage3ViewModel.cs" Style="{StaticResource Caption}" />
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

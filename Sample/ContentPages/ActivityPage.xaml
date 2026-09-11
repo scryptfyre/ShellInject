@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Sample.ViewModels" xmlns:models="clr-namespace:Sample.Models"
+             x:Class="Sample.ContentPages.ActivityPage" x:DataType="vm:ActivityViewModel" Title="Live activity">
+    <ContentPage.ToolbarItems><ToolbarItem Text="Clear" Command="{Binding ClearCommand}" /></ContentPage.ToolbarItems>
+    <Grid RowDefinitions="Auto,*" Padding="24,24,24,0" RowSpacing="20" MaximumWidthRequest="720">
+        <VerticalStackLayout Spacing="8">
+            <Label Text="UNDER THE HOOD" Style="{StaticResource Eyebrow}" />
+            <Label Text="See the actual sequence." Style="{StaticResource PageTitle}" />
+            <Label Text="Newest first · last 60 events · local to this session. Native navigation and async timing can change the order." Style="{StaticResource Caption}" />
+        </VerticalStackLayout>
+        <CollectionView Grid.Row="1" ItemsSource="{Binding Session.Events}" SelectionMode="None">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout Padding="24" Spacing="12">
+                    <Label Text="A clean slate." Style="{StaticResource Heading}" />
+                    <Label Text="Go back and run a workflow. Its API calls, parameters, results, and lifecycle callbacks will appear here." Style="{StaticResource BodyMuted}" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate><DataTemplate x:DataType="models:ActivityEntry">
+                <Border Style="{StaticResource Card}" Padding="16" Margin="0,0,0,12">
+                    <VerticalStackLayout Spacing="8">
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                            <Label Text="{Binding Source}" Style="{StaticResource Caption}" />
+                            <Label Grid.Column="1" Text="{Binding Time}" Style="{StaticResource Caption}" />
+                        </Grid>
+                        <Label Text="{Binding Event}" FontFamily="OpenSansSemibold" />
+                        <Label Text="{Binding Detail}" Style="{StaticResource Code}" />
+                    </VerticalStackLayout>
+                </Border>
+            </DataTemplate></CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

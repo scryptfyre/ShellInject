@@ -1,8 +1,8 @@
 namespace Sample.ContentViews;
 
-public partial class TestContentView
+public partial class BindingInfoView
 {
-    public TestContentView()
+    public BindingInfoView()
     {
         InitializeComponent();
     }

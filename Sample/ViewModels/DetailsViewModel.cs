@@ -1,57 +1,64 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sample.ContentPages;
+using Sample.Models;
+using Sample.Services;
 using ShellInject;
 
 namespace Sample.ViewModels;
 
-public partial class DetailsViewModel : BaseViewModel
+// Typed forward data, object result sent back to the lab's non-generic ViewModel.
+public partial class DetailsViewModel(DemoSession session, ISampleService service) : ShellInjectViewModel<DemoRequest>
 {
-    [ObservableProperty] private string _dataReceivedText = "Waiting for DataReceivedAsync...";
-    [ObservableProperty] private string _lifecycleText = "Created by ShellInject ViewModelType binding.";
+    public DemoSession Session { get; } = session;
+    public string ServiceMessage { get; } = service.GetMessage();
+    [ObservableProperty] private string _reference = "Waiting for request";
+    [ObservableProperty] private string _note = "Data is delivered through DataReceivedAsync(DemoRequest).";
+    [ObservableProperty] private string _resultText = "Shipment approved";
+    [ObservableProperty] private string _status = "Edit the result above, then return it to the lab.";
+    [ObservableProperty] private string _errorMessage = string.Empty;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(CanInteract))] private bool _isBusy;
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(CanSendDirectly)), NotifyPropertyChangedFor(nameof(Presentation))] private bool _isModal;
+    public bool CanInteract => !IsBusy;
+    public bool CanSendDirectly => !IsModal;
+    public string Presentation => IsModal ? "MODAL · TYPED REQUEST" : "PUSH · TYPED REQUEST";
 
-    public override void OnAppearing()
+    public override Task DataReceivedAsync(DemoRequest? parameter)
     {
-        LifecycleText = "OnAppearing ran from ShellInjectViewModel.";
-        base.OnAppearing();
-    }
-
-    public override void OnDisAppearing()
-    {
-        base.OnDisAppearing();
-    }
-
-    public override Task OnAppearedAsync()
-    {
-        LifecycleText = "OnAppearedAsync ran after this page appeared.";
-        return base.OnAppearedAsync();
-    }
-    
-    public override Task DataReceivedAsync(object? parameter)
-    {
-        if (parameter is string data)
-        {
-            DataReceivedText = data;
-        }
-        
+        if (parameter is null) return Task.CompletedTask;
+        Reference = parameter.Reference;
+        Note = parameter.Note;
+        IsModal = parameter.IsModal;
+        Session.Record(nameof(DetailsViewModel), "DataReceivedAsync(DemoRequest)", parameter);
         return Task.CompletedTask;
     }
 
-    [RelayCommand]
-    private Task OnPopWithParameterAsync()
-    {
-        return ShellNavigation.PopAsync(parameter: "PopAsync returned this data from DetailsPage.");
-    }
+    public override Task InitializedAsync() { Session.Record(nameof(DetailsViewModel), "InitializedAsync"); return Task.CompletedTask; }
+    public override Task OnAppearedAsync() { Session.Record(nameof(DetailsViewModel), "OnAppearedAsync"); return Task.CompletedTask; }
+    public override void OnAppearing() => Session.Record(nameof(DetailsViewModel), "OnAppearing");
+    public override void OnDisappearing() => Session.Record(nameof(DetailsViewModel), "OnDisappearing");
+
+    private DemoResult Result => new(Reference, string.IsNullOrWhiteSpace(ResultText) ? "Shipment approved" : ResultText.Trim());
 
     [RelayCommand]
-    private Task OnSendDataToMainAsync()
-    {
-        return ShellNavigation.SendDataToPageAsync<MainPage>(data: "SendDataToPageAsync sent this directly to MainViewModel.");
-    }
+    private Task ReturnAsync() => RunAsync(() => ShellNavigation.PopAsync(parameter: Result));
 
     [RelayCommand]
-    private Task OnPopToRootAsync()
+    private Task SendUpdateAsync() => RunAsync(async () =>
     {
-        return ShellNavigation.PopToRootAsync(parameter: "PopToRootAsync returned to the root with this data.");
+        // This API searches the regular Shell stack, so this action is offered only in the push workflow.
+        await ShellNavigation.SendDataToPageAsync<MainPage>(data: Result);
+        Status = "Update delivered to MainViewModel. You are still on the details page.";
+        Session.Record(nameof(DetailsViewModel), "SendDataToPageAsync<MainPage>", Result);
+    });
+
+    private async Task RunAsync(Func<Task> operation)
+    {
+        if (IsBusy) return;
+        IsBusy = true;
+        ErrorMessage = string.Empty;
+        try { await operation(); }
+        catch (Exception ex) { ErrorMessage = ex.Message; Session.Record(nameof(DetailsViewModel), "Error", ex.Message); }
+        finally { IsBusy = false; }
     }
 }

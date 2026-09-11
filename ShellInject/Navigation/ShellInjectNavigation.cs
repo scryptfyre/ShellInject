@@ -1,10 +1,12 @@
 ﻿using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Maui.Views;
 using Microsoft.Extensions.DependencyInjection;
 using ShellInject.Constants;
 using ShellInject.Extensions;
 using ShellInject.Interfaces;
+using ShellInject.Services;
 
 namespace ShellInject.Navigation;
 
@@ -15,9 +17,10 @@ internal class ShellInjectNavigation : IShellInjectNavigation
 {
     private static readonly object RouteLock = new();
     private static readonly ConcurrentDictionary<Type, string> RegisteredRoutes = new();
-    private static readonly List<Popup> PopupStack = [];
-    private static readonly object PopupStackLock = new();
+    private static readonly ConditionalWeakTable<Shell, List<Popup>> PopupStacks = new();
     private readonly SemaphoreSlim _navigationLock = new(1, 1);
+
+    private static List<Popup> GetPopupStack(Shell shell) => PopupStacks.GetValue(shell, _ => []);
     
     /// <summary>
     /// Provides a singleton instance of the <see cref="ShellInjectNavigation"/> class for Shell-based navigation in a Maui application.
@@ -50,12 +53,12 @@ internal class ShellInjectNavigation : IShellInjectNavigation
     /// </summary>
     /// <param name="shell">The Shell instance to be set up.</param>
     /// <param name="addNavigatedHandler"></param>
-    /// <exception cref="NullReferenceException">Thrown if the given shell is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown if the given shell is null.</exception>
     private void ShellSetup(Shell shell, bool addNavigatedHandler = true)
     {
         if (shell == null)
         {
-            throw new NullReferenceException(ShellInjectConstants.ShellNotFoundText);
+            throw new ArgumentNullException(nameof(shell), ShellInjectConstants.ShellNotFoundText);
         }
 
         if (addNavigatedHandler)
@@ -66,9 +69,9 @@ internal class ShellInjectNavigation : IShellInjectNavigation
                 {
                     await OnShellNavigatedAsync(s, e);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // just catch it
+                    ShellInjectInitializer.ReportError(ex);
                 }
             };
             shell.Navigated += NavigatedHandler;
@@ -185,7 +188,7 @@ internal class ShellInjectNavigation : IShellInjectNavigation
         }
     }
 
-    private static object CreateInstance(Type type)
+    private static object CreateInstance([System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors)] Type type)
     {
         if (Injector.ServiceProvider is { } provider)
         {
@@ -196,7 +199,7 @@ internal class ShellInjectNavigation : IShellInjectNavigation
                ?? throw new InvalidOperationException($"Unable to create instance of type {type.FullName}.");
     }
 
-    private static T CreateInstance<T>(Type type) where T : class
+    private static T CreateInstance<T>([System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(System.Diagnostics.CodeAnalysis.DynamicallyAccessedMemberTypes.PublicConstructors)] Type type) where T : class
     {
         if (CreateInstance(type) is T instance)
         {
@@ -225,6 +228,9 @@ internal class ShellInjectNavigation : IShellInjectNavigation
 
     private async Task HandleShellNavigatedAsync(Shell shell)
     {
+        // Event callbacks may outlive GoToAsync; never reread mutable operation state after an await.
+        var parameter = NavigationParameter;
+        var isReverse = IsReverseNavigation;
         var presentedPage = (shell.CurrentItem?.CurrentItem as IShellSectionController)?.PresentedPage;
         var page = presentedPage ?? shell.CurrentPage;
         var boundByConvention = TryBindViewModel(page);
@@ -243,15 +249,15 @@ internal class ShellInjectNavigation : IShellInjectNavigation
                 viewModel.IsInitialized = true;
             }
             
-            if (NavigationParameter is not null)
+            if (parameter is not null)
             {
-                if (IsReverseNavigation)
+                if (isReverse)
                 {
-                    await viewModel.ReverseDataReceivedAsync(NavigationParameter);
+                    await viewModel.ReverseDataReceivedAsync(parameter);
                 }
                 else
                 {
-                    await viewModel.DataReceivedAsync(NavigationParameter);
+                    await viewModel.DataReceivedAsync(parameter);
                 }
             }
         }
@@ -310,7 +316,9 @@ internal class ShellInjectNavigation : IShellInjectNavigation
             {
                 SetNavigationParameter(tParameter);
                 await shell.Navigation.PopToRootAsync(false);
+                // Absolute navigation must target the existing Shell hierarchy, not a global push route.
                 await shell.GoToAsync($"//{pageType.Name}", animate: animate);
+
                 await HandleShellNavigatedAsync(shell);
             }
             finally
@@ -329,14 +337,17 @@ internal class ShellInjectNavigation : IShellInjectNavigation
     /// <param name="tParameter">The parameter passed during navigation.</param>
     /// <param name="popToRootFirst">A flag indicating whether to pop to the root before changing the tab.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task ChangeTabAsync<TParameter>(Shell shell, int tabIndex, TParameter? tParameter, bool popToRootFirst)
+    public Task ChangeTabAsync<TParameter>(Shell shell, int tabIndex, TParameter? tParameter, bool popToRootFirst)
+        => ChangeTabAsync(shell, tabIndex, tParameter, popToRootFirst, null);
+
+    public async Task ChangeTabAsync<TParameter>(Shell shell, int tabIndex, TParameter? tParameter, bool popToRootFirst, Type? targetContentType)
     {
         await RunSerializedNavigationAsync(async () =>
         {
             ShellSetup(shell);
             try
             {
-                var target = ResolveTargetTab(shell, tabIndex);
+                var target = ResolveTargetTab(shell, tabIndex, targetContentType);
                 if (target is null)
                 {
                     return;
@@ -372,11 +383,20 @@ internal class ShellInjectNavigation : IShellInjectNavigation
         });
     }
 
-    private static (ShellItem ShellItem, ShellSection ShellSection, ShellContent ShellContent)? ResolveTargetTab(Shell shell, int tabIndex)
+    private static (ShellItem ShellItem, ShellSection ShellSection, ShellContent ShellContent)? ResolveTargetTab(Shell shell, int tabIndex, Type? targetContentType = null)
     {
         if (tabIndex < 0)
         {
             return null;
+        }
+
+        if (targetContentType is not null)
+        {
+            var typedMatch = FindTabByContentType(shell, targetContentType);
+            if (typedMatch is not null)
+            {
+                return typedMatch;
+            }
         }
 
         var currentShellItem = shell.CurrentItem;
@@ -393,6 +413,25 @@ internal class ShellInjectNavigation : IShellInjectNavigation
                 if (shellSection.Items.Count > tabIndex)
                 {
                     return (shellItem, shellSection, shellSection.Items[tabIndex]);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private static (ShellItem ShellItem, ShellSection ShellSection, ShellContent ShellContent)? FindTabByContentType(Shell shell, Type targetContentType)
+    {
+        foreach (var shellItem in shell.Items)
+        {
+            foreach (var shellSection in shellItem.Items)
+            {
+                foreach (var shellContent in shellSection.Items)
+                {
+                    if (shellContent.Content is Page page && page.GetType() == targetContentType)
+                    {
+                        return (shellItem, shellSection, shellContent);
+                    }
                 }
             }
         }
@@ -629,10 +668,10 @@ internal class ShellInjectNavigation : IShellInjectNavigation
     /// <param name="animate">A boolean value indicating whether to animate the navigation.</param>
     /// <param name="animateAllPages">A boolean value indicating whether to animate all pages during the navigation.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    /// <exception cref="NullReferenceException">Thrown when the pageTypes parameter is null or empty.</exception>
+    /// <exception cref="NullReferenceException">Thrown when pageTypes is null or empty, preserving the legacy contract.</exception>
     public async Task PushMultiStackAsync<TParameter>(Shell shell, List<Type> pageTypes, TParameter tParameter, bool animate, bool animateAllPages)
     {
-        if (pageTypes == null || pageTypes.Count == 0)
+        if (pageTypes is null || pageTypes.Count == 0)
         {
             throw new NullReferenceException(ShellInjectConstants.NavigationStatesExceptionText);
         }
@@ -669,7 +708,7 @@ internal class ShellInjectNavigation : IShellInjectNavigation
     /// <param name="page">The ContentPage to be pushed.</param>
     /// <param name="tParameter">The parameter to be passed to the view model associated with the page.</param>
     /// <param name="animate">Specifies whether the navigation transition should be animated or not. Default value is true.</param>
-    /// <exception cref="NullReferenceException">Thrown if the given shell is null or the given page is null.</exception>
+    /// <exception cref="NullReferenceException">Thrown if the given page is null, preserving the legacy contract.</exception>
     public async Task PushModalWithNavigation<TParameter>(Shell shell, ContentPage page, TParameter? tParameter, bool animate = true)
     {
         if (page == null)
@@ -748,6 +787,11 @@ internal class ShellInjectNavigation : IShellInjectNavigation
     
         var pageToSendDataTo = navigationStack
             .Where(p => p != null)
+            .FirstOrDefault(p => p.GetType() == page);
+
+        // Preserve the historical name-only match as a fallback for same-name pages registered under other namespaces.
+        pageToSendDataTo ??= navigationStack
+            .Where(p => p != null)
             .FirstOrDefault(p => p.GetType().Name == page.Name);
 
         TryBindViewModel(pageToSendDataTo);
@@ -776,18 +820,19 @@ internal class ShellInjectNavigation : IShellInjectNavigation
         var popupPage = CreateInstance<Popup>(typeof(TPopup));
         TryBindViewModel(popupPage);
 
-        lock (PopupStackLock)
+        var popupStack = GetPopupStack(shell);
+        lock (popupStack)
         {
-            PopupStack.Add(popupPage);
+            popupStack.Add(popupPage);
         }
         popupPage.Closed += OnPopupClosed;
 
         void OnPopupClosed(object? sender, EventArgs e)
         {
             popupPage.Closed -= OnPopupClosed;
-            lock (PopupStackLock)
+            lock (popupStack)
             {
-                PopupStack.Remove(popupPage);
+                popupStack.Remove(popupPage);
             }
         }
 
@@ -816,9 +861,9 @@ internal class ShellInjectNavigation : IShellInjectNavigation
         {
             popupPage.Opened -= OnPopupOpened;
             popupPage.Closed -= OnPopupClosed;
-            lock (PopupStackLock)
+            lock (popupStack)
             {
-                PopupStack.Remove(popupPage);
+                popupStack.Remove(popupPage);
             }
 
             throw;
@@ -834,9 +879,10 @@ internal class ShellInjectNavigation : IShellInjectNavigation
     public async Task DismissPopupAsync<TPopup>(Shell shell, object? data) where TPopup : Popup
     {
         List<TPopup> typedPopups;
-        lock (PopupStackLock)
+        var popupStack = GetPopupStack(shell);
+        lock (popupStack)
         {
-            typedPopups = PopupStack.OfType<TPopup>().ToList();
+            typedPopups = popupStack.OfType<TPopup>().ToList();
         }
 
         if (typedPopups.Count == 0)
@@ -863,9 +909,9 @@ internal class ShellInjectNavigation : IShellInjectNavigation
                             await vm.ReverseDataReceivedAsync(data);
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        // just catch it
+                        ShellInjectInitializer.ReportError(ex);
                     }
                 };
                     
@@ -880,9 +926,9 @@ internal class ShellInjectNavigation : IShellInjectNavigation
         }
         finally
         {
-            lock (PopupStackLock)
+            lock (popupStack)
             {
-                PopupStack.Remove(latestPopup);
+                popupStack.Remove(latestPopup);
             }
         }
     }

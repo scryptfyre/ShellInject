@@ -1,33 +1,21 @@
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sample.ContentPages;
+using Sample.Models;
+using Sample.Services;
 using ShellInject;
 
 namespace Sample.ViewModels;
 
-public partial class SamplePage3ViewModel : BaseViewModel
+public partial class SamplePage3ViewModel(DemoSession session) : BaseViewModel(session)
 {
-    [ObservableProperty] private string _dataReceivedText = "Waiting for DataReceivedAsync...";
-
-    public override Task DataReceivedAsync(object? parameter)
-    {
-        if (parameter is string data)
-        {
-            DataReceivedText = data;
-        }
-
-        return Task.CompletedTask;
-    }
+    [RelayCommand]
+    private Task BackOneAsync() => RunAsync("PopAsync", () => ShellNavigation.PopAsync(parameter: "Review returned to the intermediate step"));
 
     [RelayCommand]
-    private Task OnCloseAsync()
-    {
-        return ShellNavigation.PopToRootAsync(parameter: "PopToRootAsync closed the multi-page stack.");
-    }
-    
+    private Task FinishAsync() => RunAsync("PopToRootAsync", () =>
+        ShellNavigation.PopToRootAsync(parameter: new DemoResult(DataReceivedText, "Multi-page stack completed")));
+
     [RelayCommand]
-    private Task OnPushAsync()
-    {
-        return ShellNavigation.PushAsync<SamplePage2>(parameter: "SamplePage3 pushed another SamplePage2.");
-    }
+    private Task PopToLabAsync() => RunAsync("PopToAsync<MainPage>", () =>
+        ShellNavigation.PopToAsync<MainPage>(parameter: new DemoResult(DataReceivedText, "Returned to MainPage by type")));
 }

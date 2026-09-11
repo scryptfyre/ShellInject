@@ -22,7 +22,7 @@ public class NavigationInternalsCoverageTests : IDisposable
 
         var exception = Assert.Throws<TargetInvocationException>(() => method.Invoke(nav, [null, true]));
 
-        Assert.IsType<NullReferenceException>(exception.InnerException);
+        Assert.IsType<ArgumentNullException>(exception.InnerException);
     }
 
     [Fact]

@@ -1,25 +1,20 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-
-<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-              xmlns:vm="clr-namespace:Sample.ViewModels"
-               x:DataType="vm:SamplePopupViewModel"
-              x:Class="Sample.ContentPages.SamplePopup">
-    <toolkit:Popup.Content>
-        <Border
-            BackgroundColor="White"
-            Stroke="#E5E7EB"
-            StrokeShape="RoundRectangle 24"
-            Padding="24"
-            WidthRequest="320">
-        <VerticalStackLayout Spacing="16">
-            <Label Text="Popup" TextColor="#111827" FontSize="24" FontAttributes="Bold" />
-            <Label Text="{Binding Message}" TextColor="#4B5563" />
-            <Button
-                Command="{Binding DismissCommand}"
-                Text="Dismiss with data" />
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+               xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit" xmlns:vm="clr-namespace:Sample.ViewModels"
+               x:Class="Sample.ContentPages.SamplePopup" x:DataType="vm:SamplePopupViewModel"
+               BackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource SurfaceDark}}"
+               Margin="24" Padding="0" HorizontalOptions="Fill" VerticalOptions="Center" MaximumWidthRequest="440">
+    <ScrollView MaximumHeightRequest="520"><VerticalStackLayout Padding="24" Spacing="16">
+        <Label Text="POPUP / QUICK CONFIRMATION" Style="{StaticResource Eyebrow}" />
+        <Label Text="Ready to dispatch?" Style="{StaticResource Heading}" />
+        <Label Text="This reference was delivered to the popup ViewModel through DataReceivedAsync." Style="{StaticResource BodyMuted}" />
+        <Border Style="{StaticResource ResultCard}" Padding="16"><Label Text="{Binding DataReceivedText}" FontFamily="OpenSansSemibold" AutomationId="PopupReference" /></Border>
+        <Entry Text="{Binding Reply}" MaxLength="100" Placeholder="Confirmation message" SemanticProperties.Description="Popup confirmation message" />
+        <VerticalStackLayout Spacing="12" IsEnabled="{Binding CanInteract}">
+            <Button Text="Confirm and return result" Command="{Binding ConfirmCommand}" AutomationId="ConfirmPopup" />
+            <Button Text="Cancel · no result" Command="{Binding CancelCommand}" Style="{StaticResource SecondaryButton}" />
         </VerticalStackLayout>
-        </Border>
-    </toolkit:Popup.Content>
+        <Label Text="DismissPopupAsync sends the result back. Tapping outside or cancelling closes without a payload." Style="{StaticResource Caption}" />
+        <Label Text="{Binding ErrorMessage}" Style="{StaticResource Error}" />
+    </VerticalStackLayout></ScrollView>
 </toolkit:Popup>
