@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Sample.ViewModels" xmlns:views="clr-namespace:Sample.ContentViews"
+             x:Class="Sample.ContentPages.GuidePage" x:DataType="vm:GuideViewModel" Title="Setup guide">
+    <ScrollView><VerticalStackLayout Style="{StaticResource PageContent}">
+        <Label Text="FROM SAMPLE TO YOUR APP" Style="{StaticResource Eyebrow}" />
+        <Label Text="Wire it once.&#10;Navigate with intent." Style="{StaticResource PageTitle}" />
+        <Label Text="These are the same patterns used in this project. Start with MauiProgram.cs, then follow a ViewModel command to its destination." Style="{StaticResource BodyMuted}" />
+        <Border Style="{StaticResource Card}"><VerticalStackLayout Spacing="12">
+            <Label Text="01 / Register at startup" Style="{StaticResource Heading}" />
+            <Border Style="{StaticResource CodeCard}"><Label Text="builder.UseMauiApp&lt;App&gt;()&#10;    .UseMauiCommunityToolkit()&#10;    .UseShellInject();" Style="{StaticResource Code}" /></Border>
+            <Label Text="Toolkit startup is required for popups. Ordinary Shell navigation only needs UseShellInject. Create a Window whose root is your AppShell." Style="{StaticResource BodyMuted}" />
+        </VerticalStackLayout></Border>
+        <Border Style="{StaticResource Card}"><VerticalStackLayout Spacing="12">
+            <Label Text="02 / Choose a binding style" Style="{StaticResource Heading}" />
+            <Label Text="Convention · DetailsPage → DetailsViewModel. Keep InitializeComponent() in the page constructor and put behavior in the ViewModel." />
+            <Label Text="Explicit XAML · TabbedPageTwo → InboxViewModel, using the attached property below." />
+            <Border Style="{StaticResource CodeCard}"><Label Text="inject:ShellInjectPageExtensions.ViewModelType=&#10;    &quot;{x:Type vm:InboxViewModel}&quot;" Style="{StaticResource Code}" /></Border>
+            <Label Text="Explicit registration · SamplePage2 → StackStepViewModel, configured in UseShellInject(options => ...)." />
+            <Border Style="{StaticResource CodeCard}"><Label Text="options.RegisterViewModel&lt;&#10;    SamplePage2, StackStepViewModel&gt;();" Style="{StaticResource Code}" /></Border>
+            <Label Text="Existing BindingContexts remain yours. Keep x:DataType in XAML for compiled bindings. Registrations bypass name discovery but are not a guarantee of NativeAOT support; verify your trimmed app on device." Style="{StaticResource Caption}" />
+        </VerticalStackLayout></Border>
+        <views:BindingInfoView />
+        <Border Style="{StaticResource Card}"><VerticalStackLayout Spacing="12">
+            <Label Text="03 / Let DI supply dependencies" Style="{StaticResource Heading}" />
+            <Border Style="{StaticResource CodeCard}"><Label Text="builder.Services.AddSingleton&lt;&#10;    ISampleService, SampleService&gt;();&#10;builder.Services.AddTransient&lt;DetailsViewModel&gt;();" Style="{StaticResource Code}" /></Border>
+            <Label Text="DetailsViewModel receives ISampleService in its constructor. Unregistered ViewModels are created with ActivatorUtilities using the same provider." Style="{StaticResource BodyMuted}" />
+            <Label Text="This sample keeps the shared activity feed as a singleton and page ViewModels transient. Injector.GetRequiredService&lt;T&gt;() is available, but constructor injection makes dependencies clearer." Style="{StaticResource Caption}" />
+        </VerticalStackLayout></Border>
+        <Border Style="{StaticResource Card}"><VerticalStackLayout Spacing="12">
+            <Label Text="04 / Observe real callbacks" Style="{StaticResource Heading}" />
+            <Label Text="InitializedAsync runs once per ViewModel instance. OnAppearing and OnDisappearing follow page visibility. OnAppearedAsync is invoked by ShellInject's navigation pipeline; it is not a promise that rendering has finished." Style="{StaticResource BodyMuted}" />
+            <Label Text="Async lifecycle event callbacks can outlive the navigation Task. Read parameters in DataReceivedAsync, not in InitializedAsync, and do not assume every native Back or tab tap sends data." Style="{StaticResource Caption}" />
+            <Border Style="{StaticResource CodeCard}"><Label Text="options.ErrorHandler = ex =>&#10;    session.Record(&quot;ShellInject&quot;,&#10;        &quot;Recovered error&quot;, ex.Message);" Style="{StaticResource Code}" /></Border>
+            <Label Text="Recoverable library errors go to ErrorHandler. Command exceptions are caught by this sample and shown inline. The activity feed records actual events, not a simulated order." Style="{StaticResource BodyMuted}" />
+            <Button Text="Inspect the live activity feed" Command="{Binding OpenActivityCommand}" IsEnabled="{Binding CanInteract}" />
+        </VerticalStackLayout></Border>
+        <Border Style="{StaticResource CodeCard}"><VerticalStackLayout Spacing="8">
+            <Label Text="MIGRATING EXISTING CODE" Style="{StaticResource Eyebrow}" />
+            <Label Text="Older Shell extension methods still forward to ShellNavigation and carry obsolete warnings. Use ShellNavigation in new code. Existing OnDisAppearing overrides still work; new code can use OnDisappearing." Style="{StaticResource Caption}" />
+            <Label Text="This sample uses one Window. In a multi-window app, pass shell: owningShell consistently, including when showing and dismissing popups." Style="{StaticResource Caption}" />
+        </VerticalStackLayout></Border>
+        <Label Text="{Binding ErrorMessage}" Style="{StaticResource Error}" />
+    </VerticalStackLayout></ScrollView>
+</ContentPage>

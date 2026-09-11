@@ -4,6 +4,6 @@ public class SampleService : ISampleService
 {
     public string GetMessage()
     {
-        return "Some Message";
+        return "ISampleService resolved through constructor injection";
     }
 }

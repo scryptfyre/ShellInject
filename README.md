@@ -549,6 +549,10 @@ Use `PopModalStackAsync` for modal navigation stacks created with `PushModalWith
 
 ## Sample Project
 
+The **ShellInject Navigation Lab** provides guided workflows, an editable payload, a result
+inbox, and a live activity feed in a light/dark themed UI. See [the sample walkthrough](Sample/README.md)
+for a feature-to-source map, navigation-context guidance, and a manual verification checklist.
+
 The repository includes a sample MAUI app that demonstrates:
 
 - Convention ViewModel binding.

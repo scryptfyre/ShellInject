@@ -1,41 +1,32 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<Shell
-    x:Class="Sample.AppShell"
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:contentPages="clr-namespace:Sample.ContentPages"
-    FlyoutBehavior="Flyout"
-    Title="ShellInject Sample">
-    
-    <FlyoutItem 
-        Route="MainPage"
-        Title="Examples">
-        <ShellContent
-            Title="Examples"
-            ContentTemplate="{DataTemplate contentPages:MainPage}"
-            Route="MainPage" />
+<?xml version="1.0" encoding="utf-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:pages="clr-namespace:Sample.ContentPages" x:Class="Sample.AppShell" Title="ShellInject Lab" FlyoutBehavior="Flyout">
+    <Shell.FlyoutHeader>
+        <VerticalStackLayout BackgroundColor="{StaticResource Navy}" Padding="24,48,24,24" Spacing="12">
+            <Image Source="lab_mark.png" WidthRequest="48" HeightRequest="48" HorizontalOptions="Start" />
+            <Label Text="ShellInject" Style="{StaticResource Heading}" TextColor="White" />
+            <Label Text="THE NAVIGATION LAB" Style="{StaticResource Eyebrow}" TextColor="{StaticResource AccentDark}" />
+            <Label Text="Small examples. Complete workflows." Style="{StaticResource Caption}" TextColor="{StaticResource HeroText}" />
+        </VerticalStackLayout>
+    </Shell.FlyoutHeader>
+    <FlyoutItem Route="Lab" Title="Navigation lab">
+        <ShellContent Title="Navigation lab" Route="MainPage" ContentTemplate="{DataTemplate pages:MainPage}" />
     </FlyoutItem>
-    
-    <FlyoutItem
-        Route="TabbedPage"
-        Title="Tabs">
-        <Tab>
-            <ShellContent
-                Title="Tab One"
-                ContentTemplate="{DataTemplate contentPages:TabbedPageOne}" />
-            <ShellContent
-                Title="Tab Two"
-                ContentTemplate="{DataTemplate contentPages:TabbedPageTwo}" />
+    <FlyoutItem Route="Workspace" Title="Workspace · tabs">
+        <Tab Title="Workspace" Route="WorkspaceTabs">
+            <!-- Deliberately materialized: ChangeTabAsync<TPage> only searches created content. -->
+            <ShellContent Title="Overview" Route="Overview"><pages:TabbedPageOne /></ShellContent>
+            <ShellContent Title="Inbox" Route="Inbox"><pages:TabbedPageTwo /></ShellContent>
         </Tab>
     </FlyoutItem>
-    
-    <FlyoutItem 
-        Route="FlyoutPageThree"
-        Title="Replace Target">
-        <ShellContent
-            Title="Replace Target"
-            ContentTemplate="{DataTemplate contentPages:FlyoutPageThree}"
-            Route="FlyoutPageThree" />
+    <FlyoutItem Route="Dispatch" Title="Dispatch · replace">
+        <!-- Materialize the parameter-receiving destination before ReplaceAsync's post-navigation callback. -->
+        <ShellContent Title="Dispatch" Route="FlyoutPageThree"><pages:FlyoutPageThree /></ShellContent>
     </FlyoutItem>
-    
+    <Shell.FlyoutFooter>
+        <VerticalStackLayout Padding="24" Spacing="8">
+            <Label Text="OPEN SOURCE / .NET MAUI 10" Style="{StaticResource Eyebrow}" />
+            <Label Text="Start workflows in the lab to send data. Menu selections navigate without a new payload." Style="{StaticResource Caption}" />
+        </VerticalStackLayout>
+    </Shell.FlyoutFooter>
 </Shell>

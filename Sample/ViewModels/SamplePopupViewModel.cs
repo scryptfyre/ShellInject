@@ -1,28 +1,22 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sample.ContentPages;
+using Sample.Models;
+using Sample.Services;
 using ShellInject;
 
 namespace Sample.ViewModels;
 
-public partial class SamplePopupViewModel : BaseViewModel
+public partial class SamplePopupViewModel(DemoSession session) : BaseViewModel(session)
 {
-    [ObservableProperty] private string _message = "Loading popup parameter...";
-    
-    public override async Task DataReceivedAsync(object? parameter)
-    {
-        if (parameter is not string message)
-        {
-            return;
-        }
+    [ObservableProperty] private string _reply = "Dispatch confirmed";
 
-        await Task.Delay(500);
-        Message = message;
-    }
-    
     [RelayCommand]
-    private Task OnDismissAsync()
-    {
-        return ShellNavigation.DismissPopupAsync<SamplePopup>(data: "DismissPopupAsync returned this data from the popup.");
-    }
+    private Task ConfirmAsync() => RunAsync("DismissPopupAsync<SamplePopup>", () =>
+        ShellNavigation.DismissPopupAsync<SamplePopup>(data: new DemoResult(DataReceivedText,
+            string.IsNullOrWhiteSpace(Reply) ? "Dispatch confirmed" : Reply.Trim())));
+
+    [RelayCommand]
+    private Task CancelAsync() => RunAsync("DismissPopupAsync · no data", () =>
+        ShellNavigation.DismissPopupAsync<SamplePopup>());
 }

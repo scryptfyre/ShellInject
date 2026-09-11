@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Sample.ViewModels" x:Class="Sample.ContentPages.ModalStepPage" x:DataType="vm:ModalStepViewModel" Title="Review · Modal stack">
+    <ScrollView><VerticalStackLayout Style="{StaticResource PageContent}">
+        <Label Text="MODAL NAVIGATION / STEP 2 OF 2" Style="{StaticResource Eyebrow}" />
+        <Label Text="Stay inside the modal." Style="{StaticResource PageTitle}" />
+        <Label Text="This page was pushed with the modal's native INavigation. That push does not deliver ShellInject forward parameters. Convention binding still supplies its ViewModel." Style="{StaticResource BodyMuted}" />
+        <Border Style="{StaticResource ResultCard}"><VerticalStackLayout Spacing="12">
+            <Label Text="TWO VALID WAYS OUT" Style="{StaticResource Eyebrow}" />
+            <Label Text="Approve → return to Prepare inside this modal.&#10;&#10;Close all → return directly to the lab beneath it." />
+        </VerticalStackLayout></Border>
+        <Border Style="{StaticResource Card}"><VerticalStackLayout Spacing="12" IsEnabled="{Binding CanInteract}">
+            <Button Text="Approve · return one modal step" Command="{Binding ApproveCommand}" AutomationId="ApproveModal" />
+            <Label Text="PopAsync(parameter: approval)" Style="{StaticResource Code}" />
+            <Button Text="Close the entire modal stack" Command="{Binding CloseAllCommand}" Style="{StaticResource SecondaryButton}" />
+            <Label Text="PopModalStackAsync(data: result)" Style="{StaticResource Code}" />
+        </VerticalStackLayout></Border>
+        <Label Text="Use PopModalStackAsync here, not PopToRootAsync. The latter targets the regular Shell stack." Style="{StaticResource Caption}" />
+        <Label Text="{Binding ErrorMessage}" Style="{StaticResource Error}" />
+        <Label Text="SOURCE / ModalStepViewModel.cs" Style="{StaticResource Caption}" />
+    </VerticalStackLayout></ScrollView>
+</ContentPage>

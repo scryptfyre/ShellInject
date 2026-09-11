@@ -1,20 +1,23 @@
-<?xml version="1.0" encoding="utf-8"?>
-
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:Sample.ViewModels"
-             x:DataType="vm:FlyoutPageThreeViewModel"
-             Title="Replace Target"
-             BackgroundColor="#F7F8FC"
-             x:Class="Sample.ContentPages.FlyoutPageThree">
-    <VerticalStackLayout Spacing="16" Padding="20,24">
-        <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 20" Padding="20">
-            <VerticalStackLayout Spacing="10">
-                <Label Text="ReplaceAsync target" TextColor="#111827" FontSize="24" FontAttributes="Bold" />
-                <Label Text="This flyout item can be selected directly, or replaced from the examples page." TextColor="#6B7280" />
-                <Label Text="Received parameter" TextColor="#6B7280" FontSize="12" FontAttributes="Bold" Margin="0,8,0,0" />
-                <Label Text="{Binding DataReceivedText}" TextColor="#111827" FontSize="16" />
-            </VerticalStackLayout>
-        </Border>
-    </VerticalStackLayout>
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Sample.ViewModels" x:Class="Sample.ContentPages.FlyoutPageThree" x:DataType="vm:FlyoutPageThreeViewModel" Title="Dispatch">
+    <ScrollView><VerticalStackLayout Style="{StaticResource PageContent}">
+        <Label Text="SHELL DESTINATION / FLYOUT" Style="{StaticResource Eyebrow}" />
+        <Label Text="A new destination.&#10;Not a new stack." Style="{StaticResource PageTitle}" />
+        <Label Text="ReplaceAsync selected Dispatch from the existing Shell hierarchy. There is no details page to pop back from here." Style="{StaticResource BodyMuted}" />
+        <Border Style="{StaticResource ResultCard}"><VerticalStackLayout Spacing="12">
+            <Label Text="RECEIVED BY DISPATCH" Style="{StaticResource Eyebrow}" />
+            <Label Text="{Binding DataReceivedText}" Style="{StaticResource Heading}" />
+        </VerticalStackLayout></Border>
+        <Border Style="{StaticResource Card}"><VerticalStackLayout Spacing="12">
+            <Label Text="Routes belong to the hierarchy" Style="{StaticResource Heading}" />
+            <Label Text="The ShellContent route is FlyoutPageThree, matching the page type name. Global si_ routes are for pushes; they are not absolute flyout destinations." Style="{StaticResource BodyMuted}" />
+            <Border Style="{StaticResource CodeCard}"><Label Text="ReplaceAsync&lt;FlyoutPageThree&gt;(&#10;    parameter: reference);" Style="{StaticResource Code}" /></Border>
+            <Button Text="Replace with the navigation lab" Command="{Binding ReturnToLabCommand}" IsEnabled="{Binding CanInteract}" AutomationId="ReplaceBack" />
+            <Label Text="Returning also uses ReplaceAsync, so MainViewModel receives forward DataReceivedAsync rather than a reverse callback." Style="{StaticResource Caption}" />
+        </VerticalStackLayout></Border>
+        <Label Text="Selecting Dispatch directly from the menu does not send a parameter. Launch it from the lab to try data passing." Style="{StaticResource Caption}" />
+        <Label Text="{Binding ErrorMessage}" Style="{StaticResource Error}" />
+        <Label Text="SOURCE / FlyoutPageThreeViewModel.cs + AppShell.xaml" Style="{StaticResource Caption}" />
+    </VerticalStackLayout></ScrollView>
 </ContentPage>

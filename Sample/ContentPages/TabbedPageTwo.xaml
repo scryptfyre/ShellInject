@@ -1,22 +1,26 @@
-<?xml version="1.0" encoding="utf-8"?>
-
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:Sample.ViewModels"
-             xmlns:extensions="clr-namespace:ShellInject.Extensions;assembly=ShellInject"
-             extensions:ShellInjectPageExtensions.ViewModelType="{x:Type vm:TabbedPagedTwoViewModel}"
-             x:DataType="vm:TabbedPagedTwoViewModel"
-             Title="Tab Two"
-             BackgroundColor="#F7F8FC"
-             x:Class="Sample.ContentPages.TabbedPageTwo">
-    <VerticalStackLayout Spacing="16" Padding="20,24">
-        <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 20" Padding="20">
-            <VerticalStackLayout Spacing="10">
-                <Label Text="Tab two" TextColor="#111827" FontSize="24" FontAttributes="Bold" />
-                <Label Text="This screen uses the explicit XAML ViewModelType binding." TextColor="#6B7280" />
-                <Label Text="Received parameter" TextColor="#6B7280" FontSize="12" FontAttributes="Bold" />
-                <Label Text="{Binding DataReceivedText}" TextColor="#111827" FontSize="16" />
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Sample.ViewModels" xmlns:inject="clr-namespace:ShellInject.Extensions;assembly=ShellInject"
+             inject:ShellInjectPageExtensions.ViewModelType="{x:Type vm:InboxViewModel}"
+             x:Class="Sample.ContentPages.TabbedPageTwo" x:DataType="vm:InboxViewModel" Title="Workspace">
+    <ScrollView><VerticalStackLayout Style="{StaticResource PageContent}">
+        <Label Text="WORKSPACE / TAB 1" Style="{StaticResource Eyebrow}" />
+        <Label Text="Your tab has a message." Style="{StaticResource PageTitle}" />
+        <Label Text="TabbedPageTwo is explicitly bound to InboxViewModel in XAML. Explicit ViewModelType wins over naming conventions." Style="{StaticResource BodyMuted}" />
+        <Border Style="{StaticResource ResultCard}"><VerticalStackLayout Spacing="12">
+            <Label Text="DataReceivedAsync" Style="{StaticResource Eyebrow}" />
+            <Label Text="{Binding DataReceivedText}" Style="{StaticResource Heading}" AutomationId="TabPayload" />
+        </VerticalStackLayout></Border>
+        <Border Style="{StaticResource Card}"><VerticalStackLayout Spacing="12">
+            <Label Text="Select by page type" Style="{StaticResource Heading}" />
+            <Label Text="Both tabs are materialized in AppShell.xaml so the typed API can find Overview directly. Uncreated templates are not searched by type." Style="{StaticResource BodyMuted}" />
+            <Border Style="{StaticResource CodeCard}"><Label Text="ChangeTabAsync&lt;TabbedPageOne&gt;(&#10;    parameter: reference);" Style="{StaticResource Code}" /></Border>
+            <VerticalStackLayout Spacing="12" IsEnabled="{Binding CanInteract}">
+                <Button Text="Send to Overview by type" Command="{Binding OpenOverviewCommand}" />
+                <Button Text="Return to navigation lab" Command="{Binding ReturnToLabCommand}" Style="{StaticResource SecondaryButton}" />
             </VerticalStackLayout>
-        </Border>
-    </VerticalStackLayout>
+        </VerticalStackLayout></Border>
+        <Label Text="{Binding ErrorMessage}" Style="{StaticResource Error}" />
+        <Label Text="SOURCE / TabbedPageTwo.xaml + InboxViewModel.cs" Style="{StaticResource Caption}" />
+    </VerticalStackLayout></ScrollView>
 </ContentPage>

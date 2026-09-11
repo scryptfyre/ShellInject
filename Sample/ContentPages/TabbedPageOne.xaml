@@ -1,19 +1,25 @@
-<?xml version="1.0" encoding="utf-8"?>
-
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:vm="clr-namespace:Sample.ViewModels"
-             x:DataType="vm:TabbedPageOneViewModel"
-             Title="Tab One"
-             BackgroundColor="#F7F8FC"
-             x:Class="Sample.ContentPages.TabbedPageOne">
-    <VerticalStackLayout Spacing="16" Padding="20,24">
-        <Border BackgroundColor="White" Stroke="#E5E7EB" StrokeShape="RoundRectangle 20" Padding="20">
-            <VerticalStackLayout Spacing="10">
-                <Label Text="Tab one" TextColor="#111827" FontSize="24" FontAttributes="Bold" />
-                <Label Text="ChangeTabAsync can select another tab and deliver a parameter to its ViewModel." TextColor="#6B7280" />
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Sample.ViewModels" x:Class="Sample.ContentPages.TabbedPageOne" x:DataType="vm:TabbedPageOneViewModel" Title="Workspace">
+    <ScrollView><VerticalStackLayout Style="{StaticResource PageContent}">
+        <Label Text="WORKSPACE / TAB 0" Style="{StaticResource Eyebrow}" />
+        <Label Text="Switch context. Keep data." Style="{StaticResource PageTitle}" />
+        <Label Text="Tabs are existing Shell destinations. Selecting one sends forward data without pushing a details page." Style="{StaticResource BodyMuted}" />
+        <Border Style="{StaticResource ResultCard}"><VerticalStackLayout Spacing="12">
+            <Label Text="LATEST FORWARD DATA" Style="{StaticResource Eyebrow}" />
+            <Label Text="{Binding DataReceivedText}" />
+        </VerticalStackLayout></Border>
+        <Border Style="{StaticResource Card}"><VerticalStackLayout Spacing="12">
+            <Label Text="Select by index" Style="{StaticResource Heading}" />
+            <Label Text="Index 1 is the Inbox in this ShellSection. This page uses conventional ViewModel binding." Style="{StaticResource BodyMuted}" />
+            <Border Style="{StaticResource CodeCard}"><Label Text="ChangeTabAsync(tabIndex: 1,&#10;    parameter: reference);" Style="{StaticResource Code}" /></Border>
+            <VerticalStackLayout Spacing="12" IsEnabled="{Binding CanInteract}">
+                <Button Text="Send reference to Inbox" Command="{Binding OpenInboxCommand}" />
+                <Button Text="Return to navigation lab" Command="{Binding ReturnToLabCommand}" Style="{StaticResource SecondaryButton}" />
             </VerticalStackLayout>
-        </Border>
-        <Button Command="{Binding ShowTabTwoCommand}" Text="Send data to tab two" />
-    </VerticalStackLayout>
+        </VerticalStackLayout></Border>
+        <Label Text="Tapping a tab header uses normal Shell navigation; only the demo buttons send a new payload." Style="{StaticResource Caption}" />
+        <Label Text="{Binding ErrorMessage}" Style="{StaticResource Error}" />
+        <Label Text="SOURCE / TabbedPageOneViewModel.cs + AppShell.xaml" Style="{StaticResource Caption}" />
+    </VerticalStackLayout></ScrollView>
 </ContentPage>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:Sample.ViewModels" x:Class="Sample.ContentPages.ModalStackPage" x:DataType="vm:ModalStackViewModel" Title="Prepare · Modal stack">
+    <ScrollView><VerticalStackLayout Style="{StaticResource PageContent}">
+        <Label Text="MODAL NAVIGATION / STEP 1 OF 2" Style="{StaticResource Eyebrow}" />
+        <Label Text="A self-contained workflow." Style="{StaticResource PageTitle}" />
+        <Label Text="PushModalWithNavigationAsync wrapped this page in a modal NavigationPage. The lab remains underneath it." Style="{StaticResource BodyMuted}" />
+        <Border Style="{StaticResource ResultCard}"><VerticalStackLayout Spacing="12">
+            <Label Text="RECEIVED AT THE MODAL ROOT" Style="{StaticResource Eyebrow}" />
+            <Label Text="{Binding DataReceivedText}" Style="{StaticResource Heading}" />
+            <Label Text="{Binding ReverseDataText}" Style="{StaticResource BodyMuted}" />
+        </VerticalStackLayout></Border>
+        <Border Style="{StaticResource Card}"><VerticalStackLayout Spacing="12">
+            <Label Text="Use the right navigation stack" Style="{StaticResource Heading}" />
+            <Label Text="The next step uses this modal's INavigation.PushAsync. ShellNavigation.PushAsync would push onto Shell instead." Style="{StaticResource BodyMuted}" />
+            <Border Style="{StaticResource CodeCard}"><Label Text="await modal.Navigation.PushAsync(&#10;    new ModalStepPage());" Style="{StaticResource Code}" /></Border>
+            <VerticalStackLayout Spacing="12" IsEnabled="{Binding CanInteract}">
+                <Button Text="Continue to modal review" Command="{Binding ReviewCommand}" AutomationId="ModalReview" />
+                <Button Text="Close modal stack with result" Command="{Binding CloseStackCommand}" Style="{StaticResource SecondaryButton}" AutomationId="CloseModalStack" />
+            </VerticalStackLayout>
+        </VerticalStackLayout></Border>
+        <Label Text="{Binding ErrorMessage}" Style="{StaticResource Error}" />
+        <Label Text="SOURCE / ModalStackViewModel.cs" Style="{StaticResource Caption}" />
+    </VerticalStackLayout></ScrollView>
+</ContentPage>
